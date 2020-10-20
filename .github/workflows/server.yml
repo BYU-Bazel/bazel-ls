@@ -8,6 +8,7 @@ on:
     branches: [ server ]
   pull_request:
     branches: [ server ]
+  
 
 jobs:
   build:
