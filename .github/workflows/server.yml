@@ -21,7 +21,9 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: Go into server dir
+      run: cd server
     - name: Grant execute permission for gradlew
-      run: cd server && ls
-#    - name: Build with Gradle
-#      run: ./gradlew build
+      run: chmod +x gradlew
+    - name: Build with Gradle
+      run: ./gradlew build
