@@ -26,5 +26,6 @@ jobs:
     - run: |
         cd client_vscode
         npm install
-        npm compile
+        npm audit fix
+        npm run compile
         npm test
