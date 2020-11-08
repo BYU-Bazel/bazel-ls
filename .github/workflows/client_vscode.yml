@@ -5,9 +5,9 @@ name: client_vscode CI with npm
 
 on:
   push:
-    branches: [ client_vscode, develop ]
+    branches: [ client, develop ]
   pull_request:
-    branches: [ client_vscode, develop ]
+    branches: [ client, develop ]
 
 jobs:
   build-and-test:
