@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-18.04]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,7 +28,6 @@ jobs:
       with:
         java-version: 11
     - name: test client via npm
-      shell: bash
       run: |
         cd client_vscode
         npm install
