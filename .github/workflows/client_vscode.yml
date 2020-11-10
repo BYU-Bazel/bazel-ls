@@ -28,6 +28,7 @@ jobs:
       with:
         java-version: 11
     - run: |
+        bash
         cd client_vscode
         npm install
         npm audit fix
