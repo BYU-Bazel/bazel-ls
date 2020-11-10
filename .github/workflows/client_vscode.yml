@@ -32,5 +32,5 @@ jobs:
       run: |
         cd client_vscode
         npm install
-        bash scripts/build.sh
+        npm run compile
         npm test
