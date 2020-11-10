@@ -27,9 +27,4 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 11
-    - run: |
-        cd client_vscode
-        npm install
-        npm audit fix
-        npm run compile
-        npm test
+    - run: bash --version
