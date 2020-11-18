@@ -36,5 +36,6 @@ jobs:
         workdir: ./server
         fail_on_error: true
         filter_mode: nofilter
+        level: error
 
         
