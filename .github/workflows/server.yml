@@ -34,6 +34,7 @@ jobs:
       uses: nikitasavinov/checkstyle-action@0.3.1
       with:
         workdir: ./server
+        checkstyle_config: ./server/bazel_checks.xml
         fail_on_error: true
         filter_mode: nofilter
         level: error
