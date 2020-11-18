@@ -33,6 +33,7 @@ jobs:
     - name: Run java checkstyle
       uses: nikitasavinov/checkstyle-action@0.3.1
       with:
-        workdir: server
+        workdir: ./server
+        fail_on_error: true
 
         
