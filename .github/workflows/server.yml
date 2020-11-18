@@ -5,9 +5,9 @@ name: Server Java CI with Gradle
 
 on:
   push:
-    branches: [ server, develop ]
+    branches: [ checkstyle, develop ]
   pull_request:
-    branches: [ server, develop ]
+    branches: [ checkstyle, develop ]
   
 
 jobs:
@@ -30,4 +30,9 @@ jobs:
         chmod +x gradlew
         ./gradlew build
         gradle test
+    - name: Run java checkstyle
+      uses: nikitasavinov/checkstyle-action@0.3.1
+      with:
+        workdir: server
+
         
