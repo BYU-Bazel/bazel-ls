@@ -4,9 +4,15 @@ java_library(
     name = "interp",
     srcs = [
         "CompatabilityUtility.java",
+        "FilePosition.java",
+        "FileRange.java",
         "InterpException.java",
         "Label.java",
+        "LabelName.java",
+        "LabelPart.java",
+        "LabelPkg.java",
         "LabelSyntaxException.java",
+        "LabelWorkspace.java",
     ],
     deps = [
         "//server/src/main/java/server/bazel/tree",

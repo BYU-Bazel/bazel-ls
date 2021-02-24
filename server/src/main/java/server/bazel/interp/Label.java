@@ -1,8 +1,8 @@
 package server.bazel.interp;
 
-import com.google.common.base.Preconditions;
 import server.utils.Nullability;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,17 +10,12 @@ import java.util.regex.Pattern;
  * Represents a Bazel target label. E.g. `@maven//some/other:package_name`.
  */
 public class Label {
-    private final String workspace;
-    private final String root;
-    private final String pkg;
-    private final String name;
+    private final LabelWorkspace workspace;
+    private final boolean root;
+    private final LabelPkg pkg;
+    private final LabelName name;
 
-    private Label(String workspace, String root, String pkg, String name) {
-        Preconditions.checkNotNull(workspace);
-        Preconditions.checkNotNull(root);
-        Preconditions.checkNotNull(pkg);
-        Preconditions.checkNotNull(name);
-
+    private Label(LabelWorkspace workspace, boolean root, LabelPkg pkg, LabelName name) {
         this.workspace = workspace;
         this.root = root;
         this.pkg = pkg;
@@ -64,8 +59,13 @@ public class Label {
             String workspaceValue = Nullability.nullableOr("", () -> matcher.group(1));
             String rootValue = Nullability.nullableOr("", () -> matcher.group(2));
             String pkgValue = Nullability.nullableOr("", () -> matcher.group(3));
-            String ruleValue = Nullability.nullableOr("", () -> matcher.group(4));
-            label = new Label(workspaceValue, rootValue, pkgValue, ruleValue);
+            String nameValue = Nullability.nullableOr("", () -> matcher.group(4));
+
+            label = new Label(
+                    workspaceValue.isEmpty() ? null : LabelWorkspace.fromString(workspaceValue),
+                    !rootValue.isEmpty(),
+                    pkgValue.isEmpty() ? null : LabelPkg.fromString(pkgValue),
+                    nameValue.isEmpty() ? null : LabelName.fromString(nameValue));
         } else {
             throw new LabelSyntaxException();
         }
@@ -78,7 +78,7 @@ public class Label {
         // Labels that don't have a root could be source file. A source file is valid
         // iff it is referencing a file relative to wherever its declaration is in the
         // file tree. Referencing sub files within that directory is not valid.
-        if (!label.hasWorkspace() && !label.hasRoot() && !label.hasName() && label.pkg().contains("/")) {
+        if (!label.hasWorkspace() && !label.hasRoot() && !label.hasName() && label.pkg().value().contains("/")) {
             throw new LabelSyntaxException("A source file may not contain any \"/\" characters.");
         }
 
@@ -94,7 +94,7 @@ public class Label {
      * @return Whether this label is a local reference.
      */
     public boolean isLocal() {
-        return !hasWorkspace() && !hasRoot() && !hasPkg();
+        return !hasWorkspace() && !hasRoot() && !hasPkg() && hasName();
     }
 
     /**
@@ -105,7 +105,7 @@ public class Label {
      * @return Whether this label represents a source file.
      */
     public boolean isSourceFile() {
-        return !hasRoot() && !hasWorkspace() && !hasName();
+        return !hasRoot() && !hasWorkspace() && hasPkg() && !hasName();
     }
 
     /**
@@ -117,7 +117,7 @@ public class Label {
      *
      * @return The workspace.
      */
-    public String workspace() {
+    public LabelWorkspace workspace() {
         return workspace;
     }
 
@@ -125,7 +125,7 @@ public class Label {
      * @return Whether the workspace field is declared in this label.
      */
     public boolean hasWorkspace() {
-        return !workspace().isEmpty();
+        return workspace() != null;
     }
 
     /**
@@ -133,17 +133,10 @@ public class Label {
      * or an implied workspace name. This may be left out, in which case this label
      * could represent a source file or local rull dependency.
      *
-     * @return The root.
-     */
-    public String root() {
-        return root;
-    }
-
-    /**
      * @return Whether the root field is declared in this label.
      */
     public boolean hasRoot() {
-        return !root().isEmpty();
+        return root;
     }
 
     /**
@@ -153,7 +146,7 @@ public class Label {
      *
      * @return The package.
      */
-    public String pkg() {
+    public LabelPkg pkg() {
         return pkg;
     }
 
@@ -161,7 +154,7 @@ public class Label {
      * @return Whether the package field is declared in this label.
      */
     public boolean hasPkg() {
-        return !pkg().isEmpty();
+        return pkg() != null;
     }
 
     /**
@@ -172,7 +165,7 @@ public class Label {
      *
      * @return The name.
      */
-    public String name() {
+    public LabelName name() {
         return name;
     }
 
@@ -180,7 +173,7 @@ public class Label {
      * @return Whether the name field is declared in this label.
      */
     public boolean hasName() {
-        return !name().isEmpty();
+        return name() != null;
     }
 
     /**
@@ -200,7 +193,7 @@ public class Label {
 
         // Append the "//" if specified.
         if (hasRoot()) {
-            builder.append(root());
+            builder.append("//");
         }
 
         // Append the "path/to/package" if specified.
@@ -224,5 +217,21 @@ public class Label {
     @Override
     public String toString() {
         return value();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Label)) return false;
+        Label label = (Label) o;
+        return Objects.equals(workspace, label.workspace) &&
+                Objects.equals(root, label.root) &&
+                Objects.equals(pkg, label.pkg) &&
+                Objects.equals(name, label.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(workspace, root, pkg, name);
     }
 }
