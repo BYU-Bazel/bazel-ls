@@ -1,0 +1,64 @@
+package server.bazel.interp;
+
+import com.google.common.base.Preconditions;
+
+import java.nio.file.Path;
+import java.util.Objects;
+import java.util.UUID;
+
+public class UniqueID {
+    final String value;
+    final String friendly;
+
+    private UniqueID(String value, String friendly) {
+        Preconditions.checkNotNull(value);
+        Preconditions.checkNotNull(friendly);
+        this.value = value;
+        this.friendly = friendly;
+    }
+
+    public static UniqueID custom(String value, String friendly) {
+        return new UniqueID(value, friendly);
+    }
+
+    public static UniqueID random() {
+        final String uid = InterpUtility.hash(UUID.randomUUID().toString());
+        final String friendly = "Random Unique ID";
+        return new UniqueID(uid, friendly);
+    }
+
+    public static UniqueID fromPath(Path path) {
+        final String abs = path.toAbsolutePath().toString();
+        final String uid = InterpUtility.hash(abs);
+        return new UniqueID(uid, abs);
+    }
+
+    public String value() {
+        return value;
+    }
+
+    public String friendly() {
+        return friendly;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UniqueID)) return false;
+        UniqueID uniqueID = (UniqueID) o;
+        return Objects.equals(value, uniqueID.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return "UniqueID{" +
+                "value='" + value + '\'' +
+                ", friendly='" + friendly + '\'' +
+                '}';
+    }
+}

@@ -30,22 +30,22 @@ public class CompatabilityUtility {
             Preconditions.checkNotNull(path);
             Preconditions.checkArgument(label.hasName());
             path = toWorkspaceLocal(path);
-            return new BuildTarget(Path.of("//" + path), label.name(), null);
+            return new BuildTarget(Path.of("//" + path), label.name().value(), null);
         }
 
         if (label.hasPkg() && label.hasName()) {
-            return new BuildTarget(Path.of("//" + label.pkg()), label.name(), null);
+            return new BuildTarget(Path.of("//" + label.pkg()), label.name().value(), null);
         }
 
         if (!label.hasName()) {
             // Handle implied packages.
-            final String[] parts = label.pkg().split("/");
+            final String[] parts = label.pkg().value().split("/");
             final String lastPackageName = parts[parts.length - 1];
             return new BuildTarget(Path.of("//" + label.pkg()), lastPackageName, null);
         }
 
         // It only has the name.
-        return new BuildTarget(Path.of("//"), label.name(), null);
+        return new BuildTarget(Path.of("//"), label.name().value(), null);
     }
 
     // TODO(josiahsrc): This behavior should be implied by interp.

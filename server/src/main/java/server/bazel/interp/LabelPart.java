@@ -8,7 +8,7 @@ public abstract class LabelPart {
     private final String value;
 
     protected LabelPart(String value) {
-        Preconditions.checkNotNull(value, "A label part must not be null.");
+        Preconditions.checkNotNull(value);
         Preconditions.checkArgument(!value.isEmpty(), "A label part must not be empty.");
         this.value = value;
     }

@@ -2,18 +2,7 @@ load("@rules_java//java:defs.bzl", "java_library")
 
 java_library(
     name = "interp",
-    srcs = [
-        "CompatabilityUtility.java",
-        "FilePosition.java",
-        "FileRange.java",
-        "InterpException.java",
-        "Label.java",
-        "LabelName.java",
-        "LabelPart.java",
-        "LabelPkg.java",
-        "LabelSyntaxException.java",
-        "LabelWorkspace.java",
-    ],
+    srcs = glob(["*.java"]),
     deps = [
         "//server/src/main/java/server/bazel/tree",
         "//server/src/main/java/server/utils",

@@ -7,6 +7,7 @@ java_library(
     srcs = [
         "Callbacks.java",
         "DocumentTracker.java",
+        "Exceptions.java",
         "FileRepository.java",
         "Logging.java",
         "Nullability.java",
