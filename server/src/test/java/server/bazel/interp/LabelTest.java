@@ -10,8 +10,8 @@ public class LabelTest {
         Label l = Label.parse(value);
 
         Assert.assertFalse(l.hasWorkspace());
-        Assert.assertEquals(LabelPkg.fromString("path/to"), l.pkg());
-        Assert.assertEquals(LabelName.fromString("target"), l.name());
+        Assert.assertEquals(PkgID.fromString("path/to"), l.pkg());
+        Assert.assertEquals(TargetID.fromString("target"), l.name());
         Assert.assertFalse(l.isLocal());
         Assert.assertFalse(l.isSourceFile());
     }
@@ -23,7 +23,7 @@ public class LabelTest {
 
         Assert.assertFalse(l.hasWorkspace());
         Assert.assertFalse(l.hasPkg());
-        Assert.assertEquals(LabelName.fromString("something"), l.name());
+        Assert.assertEquals(TargetID.fromString("something"), l.name());
         Assert.assertTrue(l.isLocal());
         Assert.assertFalse(l.isSourceFile());
     }
@@ -55,7 +55,7 @@ public class LabelTest {
         String value = "@foo";
         Label l = Label.parse(value);
 
-        Assert.assertEquals(LabelWorkspace.fromString("foo"), l.workspace());
+        Assert.assertEquals(WorkspaceID.fromString("foo"), l.workspace());
         Assert.assertFalse(l.hasPkg());
         Assert.assertFalse(l.hasName());
         Assert.assertFalse(l.isLocal());
@@ -68,7 +68,7 @@ public class LabelTest {
         Label l = Label.parse(value);
 
         Assert.assertFalse(l.hasWorkspace());
-        Assert.assertEquals(LabelPkg.fromString("hello_world.cc"), l.pkg());
+        Assert.assertEquals(PkgID.fromString("hello_world.cc"), l.pkg());
         Assert.assertFalse(l.hasName());
         Assert.assertTrue(l.isSourceFile());
         Assert.assertFalse(l.isLocal());
@@ -79,7 +79,7 @@ public class LabelTest {
         String value = "hello";
         Label l = Label.parse(value);
         Assert.assertFalse(l.hasWorkspace());
-        Assert.assertEquals(LabelPkg.fromString("hello"), l.pkg());
+        Assert.assertEquals(PkgID.fromString("hello"), l.pkg());
         Assert.assertFalse(l.hasName());
         Assert.assertTrue(l.isSourceFile());
         Assert.assertFalse(l.isLocal());

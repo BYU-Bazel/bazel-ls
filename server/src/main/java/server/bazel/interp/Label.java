@@ -10,12 +10,12 @@ import java.util.regex.Pattern;
  * Represents a Bazel target label. E.g. `@maven//some/other:package_name`.
  */
 public class Label {
-    private final LabelWorkspace workspace;
+    private final WorkspaceID workspace;
     private final boolean root;
-    private final LabelPkg pkg;
-    private final LabelName name;
+    private final PkgID pkg;
+    private final TargetID name;
 
-    private Label(LabelWorkspace workspace, boolean root, LabelPkg pkg, LabelName name) {
+    private Label(WorkspaceID workspace, boolean root, PkgID pkg, TargetID name) {
         this.workspace = workspace;
         this.root = root;
         this.pkg = pkg;
@@ -62,10 +62,10 @@ public class Label {
             String nameValue = Nullability.nullableOr("", () -> matcher.group(4));
 
             label = new Label(
-                    workspaceValue.isEmpty() ? null : LabelWorkspace.fromString(workspaceValue),
+                    workspaceValue.isEmpty() ? null : WorkspaceID.fromString(workspaceValue),
                     !rootValue.isEmpty(),
-                    pkgValue.isEmpty() ? null : LabelPkg.fromString(pkgValue),
-                    nameValue.isEmpty() ? null : LabelName.fromString(nameValue));
+                    pkgValue.isEmpty() ? null : PkgID.fromString(pkgValue),
+                    nameValue.isEmpty() ? null : TargetID.fromString(nameValue));
         } else {
             throw new LabelSyntaxException();
         }
@@ -117,7 +117,7 @@ public class Label {
      *
      * @return The workspace.
      */
-    public LabelWorkspace workspace() {
+    public WorkspaceID workspace() {
         return workspace;
     }
 
@@ -146,7 +146,7 @@ public class Label {
      *
      * @return The package.
      */
-    public LabelPkg pkg() {
+    public PkgID pkg() {
         return pkg;
     }
 
@@ -165,7 +165,7 @@ public class Label {
      *
      * @return The name.
      */
-    public LabelName name() {
+    public TargetID name() {
         return name;
     }
 

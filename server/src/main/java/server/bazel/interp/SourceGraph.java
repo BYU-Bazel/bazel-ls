@@ -1,82 +1,131 @@
 package server.bazel.interp;
 
 import com.google.common.base.Preconditions;
+import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.StarlarkFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import server.utils.Exceptions;
 
-import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SourceGraph {
     private static final Logger logger = LogManager.getLogger(SourceGraph.class);
 
     private final RootNode root;
     private final Map<UniqueID, SourceGraphNode> nodes;
+    private final Map<UniqueID, SourceGraphEdge> edges;
 
     private SourceGraph() {
         root = new RootNode();
-
-        // The root node should always be present in the graph.
         nodes = new HashMap<>();
-        nodes.put(root.id(), root);
+        edges = new HashMap<>();
     }
 
     public static SourceGraph empty() {
-        return new SourceGraph();
+        final SourceGraph graph = new SourceGraph();
+        graph.nodes.put(graph.root.id(), graph.root);
+        return graph;
     }
 
-    public void syncWithWorkspaceFile(FileInformation file) throws SourceGraphException {
-        Preconditions.checkNotNull(file);
-        Preconditions.checkArgument(file.kind() == FileKind.WORKSPACE);
+    public boolean isFileAttached(FileInformation info) throws SourceGraphException {
+        Preconditions.checkNotNull(info);
+        return containsNode(info.uniqueID());
     }
 
-    // TODO: Improve/fix
-    public boolean containsNode(UniqueID id) {
-        return nodes.containsKey(id);
-    }
+    public void attachFile(FileInformation info) throws SourceGraphException {
+        Preconditions.checkNotNull(info);
 
-    // TODO: Improve/fix
-    public SourceGraphNode getNode(UniqueID id) {
-        if (!containsNode(id)) {
-            return null;
+        if (isFileAttached(info)) {
+            throw new SourceGraphException("File has already been attached.");
         }
 
-        return nodes.get(id);
-    }
-
-    // TODO: Improve/fix
-    public UniqueID addFileNode(Path path) throws SourceGraphException {
-        Preconditions.checkNotNull(path);
-
-        final UniqueID id = UniqueID.fromPath(path);
-        if (containsNode(id)) {
-            throw new SourceGraphException("Node already contained in source graph.");
-        }
-
-        FileNode fileNode;
-        final FileKind kind = InterpUtility.inferFileKind(path);
-        switch (kind) {
+        // Create a node to be added to the graph. This node will be a FileNode.
+        FileNode node;
+        final UniqueID id = info.uniqueID();
+        switch (info.kind()) {
             case WORKSPACE:
-                fileNode = new WorkspaceFileNode(id);
+                node = new WorkspaceFileNode(id);
                 break;
             default:
                 throw new Exceptions.Unimplemented();
         }
 
-        nodes.put(id, fileNode);
-        return id;
+        // Add the node and consider the file to be "attached".
+        addNode(node);
+
+        // Sync with the file after adding to give some information to the node.
+        syncFile(info);
     }
 
-    // TODO: Improve/fix
-    public void removeFileNode(Path path) throws SourceGraphException {
-        Preconditions.checkNotNull(path);
+    public void syncFile(FileInformation info) throws SourceGraphException {
+        Preconditions.checkNotNull(info);
 
-        final UniqueID id = UniqueID.fromPath(path);
-        if (!containsNode(id)) {
-            throw new SourceGraphException("Node not contained in source graph.");
+        if (!isFileAttached(info)) {
+            throw new SourceGraphException("Cannot sync with a file that has not been attached.");
         }
 
-        nodes.remove(id);
+        // Get the node for the provided file information. We're guaranteed that this will be a file node.
+        final FileNode node = getNode(info.uniqueID(), FileNode.class);
+
+        // TODO:
+        //  Switch over the file type. Start with workspace. If is workspace, then go through and
+        //  constrcut nodes based on
+        //  - Load statements (do these first just for testing)
+        //  - Repository rules
+        //  - Function calls which invoke things from the load statements
+    }
+
+    public void detachFile(FileInformation info) throws SourceGraphException {
+        Preconditions.checkNotNull(info);
+
+        if (!isFileAttached(info)) {
+            throw new SourceGraphException("Cannot detach a file that has not been attached.");
+        }
+
+        throw new Exceptions.Unimplemented("TODO: Detach files should prune the graph.");
+    }
+
+    private boolean containsNode(UniqueID nodeID) {
+        Preconditions.checkNotNull(nodeID);
+        return nodes.containsKey(nodeID);
+    }
+
+    private SourceGraphNode getNode(UniqueID nodeID) {
+        Preconditions.checkNotNull(nodeID);
+        return nodes.get(nodeID);
+    }
+
+    private <T extends SourceGraphNode> T getNode(UniqueID nodeID, Class<T> clazz) {
+        Preconditions.checkNotNull(nodeID);
+
+        final SourceGraphNode node = getNode(nodeID);
+        if (node == null) {
+            return null;
+        }
+
+        if (clazz.isInstance(node)) {
+            return clazz.cast(node);
+        }
+
+        throw new ClassCastException(String.format("The desired node with id %s with class %s does not " +
+                "inherit from the provided %s class.", nodeID, node.getClass(), clazz));
+    }
+
+    private void addNode(SourceGraphNode node) throws SourceGraphException {
+        Preconditions.checkNotNull(node);
+        if (containsNode(node.id())) {
+            throw new SourceGraphException("Node already exists.");
+        }
+        nodes.put(node.id(), node);
+    }
+
+    private void removeNode(UniqueID nodeID) throws SourceGraphException {
+        Preconditions.checkNotNull(nodeID);
+        if (!containsNode(nodeID)) {
+            throw new SourceGraphException("Node not found.");
+        }
+        nodes.remove(nodeID);
     }
 }

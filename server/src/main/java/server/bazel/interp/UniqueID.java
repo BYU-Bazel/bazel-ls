@@ -17,20 +17,29 @@ public class UniqueID {
         this.friendly = friendly;
     }
 
-    public static UniqueID custom(String value, String friendly) {
+    public static UniqueID raw(String value, String friendly) {
         return new UniqueID(value, friendly);
     }
 
     public static UniqueID random() {
-        final String uid = InterpUtility.hash(UUID.randomUUID().toString());
-        final String friendly = "Random Unique ID";
-        return new UniqueID(uid, friendly);
+        final String uid = UUID.randomUUID().toString();
+        final String friendly = "Completely random ID";
+        return UniqueID.raw(uid, friendly);
     }
 
     public static UniqueID fromPath(Path path) {
         final String abs = path.toAbsolutePath().toString();
-        final String uid = InterpUtility.hash(abs);
-        return new UniqueID(uid, abs);
+        final String uid = Utility.hash(abs);
+        return UniqueID.raw(uid, abs);
+    }
+
+    public static UniqueID fromStartEndNodes(SourceGraphNode start, SourceGraphNode end) {
+        Preconditions.checkNotNull(start);
+        Preconditions.checkNotNull(end);
+
+        final String uid = Utility.hash(start.id().value + end.id().value);
+        final String friendly = "ID representing a path between two nodes";
+        return UniqueID.raw(uid, friendly);
     }
 
     public String value() {

@@ -118,7 +118,7 @@ public class DiagnosticsProvider {
 
                                                 // If source file is invalid, say its invalid.
                                                 if (label.isSourceFile()) {
-                                                    Path srcFilePath = Paths.get(label.pkg());
+                                                    Path srcFilePath = Paths.get(label.pkg().value());
                                                     Path parent = textDocPath.getParent();
                                                     Path absSrcFilePath = parent.resolve(srcFilePath).toAbsolutePath();
                                                     if (!Files.exists(absSrcFilePath)) {

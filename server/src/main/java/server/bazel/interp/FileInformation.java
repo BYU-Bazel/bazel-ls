@@ -1,7 +1,6 @@
 package server.bazel.interp;
 
 import com.google.common.base.Preconditions;
-import server.utils.Exceptions;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,7 +31,7 @@ public class FileInformation {
         Preconditions.checkNotNull(path);
         Preconditions.checkNotNull(content);
 
-        final FileKind kind = InterpUtility.inferFileKind(path);
+        final FileKind kind = FileKind.inferFrom(path);
         return new FileInformation(path, kind, content);
     }
 
@@ -46,5 +45,9 @@ public class FileInformation {
 
     public String content() {
         return content;
+    }
+
+    public UniqueID uniqueID() {
+        return UniqueID.fromPath(path());
     }
 }

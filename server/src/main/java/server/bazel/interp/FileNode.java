@@ -1,7 +1,14 @@
 package server.bazel.interp;
 
-public class FileNode extends SourceGraphNode {
+public abstract class FileNode extends SourceGraphNode {
     FileNode(UniqueID id) {
         super(id);
     }
+
+    @Override
+    public SourceGraphNodeKind nodeKind() {
+        return SourceGraphNodeKind.FILE;
+    }
+
+    public abstract FileKind fileKind();
 }
