@@ -17,6 +17,8 @@ public abstract class SourceGraphNode extends SourceGraphComponent {
 
     public abstract SourceGraphNodeKind nodeKind();
 
+    public abstract void sync(SourceGraphSyncContext context);
+
     Iterable<SourceGraphEdge> fowardDependencies() {
         return outEdges.values();
     }

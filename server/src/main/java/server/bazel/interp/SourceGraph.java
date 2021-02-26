@@ -68,7 +68,18 @@ public class SourceGraph {
 
         // Get the node for the provided file information. We're guaranteed that this will be a file node.
         final FileNode node = getNode(info.uniqueID(), FileNode.class);
+        assert node != null;
 
+        // Construct a context in which to perform syncing.
+        final SourceGraphSyncContext
+
+        switch (node.fileKind()) {
+            case WORKSPACE:
+                break;
+            case BAZEL:
+            case BUILD:
+                throw new Exceptions.Unimplemented();
+        }
         // TODO:
         //  Switch over the file type. Start with workspace. If is workspace, then go through and
         //  constrcut nodes based on

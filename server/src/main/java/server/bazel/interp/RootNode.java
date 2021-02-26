@@ -6,4 +6,9 @@ public class RootNode extends SourceGraphNode {
     RootNode() {
         super(DEFAULT_ID);
     }
+
+    @Override
+    public SourceGraphNodeKind nodeKind() {
+        return SourceGraphNodeKind.ROOT;
+    }
 }

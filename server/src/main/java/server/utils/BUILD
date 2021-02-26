@@ -6,6 +6,7 @@ java_library(
     name = "utils",
     srcs = [
         "Callbacks.java",
+        "Context.java",
         "DocumentTracker.java",
         "Exceptions.java",
         "FileRepository.java",

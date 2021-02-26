@@ -1,4 +1,15 @@
-load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_java//java:defs.bzl", "java_library", "java_binary")
+
+java_binary(
+    name = "test_prog",
+    main_class = "server.bazel.interp.TestProg",
+    runtime_deps = [
+        ":interp",
+    ],
+    resources = [
+        "//server/src/main/resources",
+    ],
+)
 
 java_library(
     name = "interp",
@@ -9,6 +20,7 @@ java_library(
         "//server/src/main/java/server/workspace",
         "//third_party/java:guava",
         "//third_party/java:log4j",
+        "//third_party/java:starlark",
     ],
     visibility = [
         "//server/src/main/java/server/diagnostics:__subpackages__",

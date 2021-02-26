@@ -9,6 +9,15 @@ you're working on the bazel interpretting issue.
 
 Lazily build a dependency graph resembling a Bazel project's anatomy.
 
+## Test Program
+
+There is a test program to speed up development iteration. Use the following
+command to run the test program.
+
+```
+./server/src/main/java/server/bazel/interp/test.sh
+```
+
 ## TODO
 
 - ~~Create empty graph~~
