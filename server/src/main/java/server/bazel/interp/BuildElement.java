@@ -1,4 +1,4 @@
 package server.bazel.interp;
 
-public class BuildFileNode {
+public class BuildElement {
 }

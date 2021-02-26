@@ -18,19 +18,19 @@ public class TestProg {
         String workspaceContent = Files.readString(workspacePath);
         logger.info("Workspace content:\n" + workspaceContent.substring(0, 150) + "...");
 
-        SourceGraph sourceGraph = SourceGraph.empty();
+        Graph graph = Graph.empty();
         {
-            final FileInformation workspaceInfo = FileInformation.fromPath(workspacePath);
+            final FileInfo workspaceInfo = FileInfo.fromPath(workspacePath);
 
             logger.info("Building graph using workspace file.");
             logger.info("Does graph contain [" + workspacePath + "] path: " +
-                    sourceGraph.isFileAttached(workspaceInfo));
+                    graph.containsFile(workspaceInfo));
 
             logger.info("Attaching path [" + workspacePath + "] to source graph.");
-            sourceGraph.attachFile(workspaceInfo);
+            graph.attachFile(workspaceInfo);
 
             logger.info("Does graph contain [" + workspacePath + "] path: " +
-                    sourceGraph.isFileAttached(workspaceInfo));
+                    graph.containsFile(workspaceInfo));
         }
     }
 }

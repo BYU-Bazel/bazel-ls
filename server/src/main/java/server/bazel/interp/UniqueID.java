@@ -33,7 +33,7 @@ public class UniqueID {
         return UniqueID.raw(uid, abs);
     }
 
-    public static UniqueID fromStartEndNodes(SourceGraphNode start, SourceGraphNode end) {
+    public static UniqueID fromStartEndNodes(GraphNode start, GraphNode end) {
         Preconditions.checkNotNull(start);
         Preconditions.checkNotNull(end);
 

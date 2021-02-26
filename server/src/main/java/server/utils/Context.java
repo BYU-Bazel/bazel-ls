@@ -8,7 +8,7 @@ import java.util.Map;
 public class Context {
     private final Map<Object, Object> injectables = new HashMap<>();
 
-    private Context() {
+    protected Context() {
     }
 
     public static Context empty() {

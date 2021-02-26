@@ -18,6 +18,12 @@ command to run the test program.
 ./server/src/main/java/server/bazel/interp/test.sh
 ```
 
+## Notes
+
+- If you change a file in a source graph, the only thing that could change would
+be the files that depend on it (e.g. inverse deps). The forward dependencies will
+not be effected.
+
 ## TODO
 
 - ~~Create empty graph~~

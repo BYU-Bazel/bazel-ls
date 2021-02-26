@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileInformation {
+public class FileInfo {
     private final Path path;
     private final FileKind kind;
     private final String content;
 
-    private FileInformation(Path path, FileKind kind, String content) {
+    private FileInfo(Path path, FileKind kind, String content) {
         Preconditions.checkNotNull(path);
         Preconditions.checkNotNull(kind);
         Preconditions.checkNotNull(content);
@@ -21,18 +21,18 @@ public class FileInformation {
         this.content = content;
     }
 
-    public static FileInformation fromPath(Path path) throws IOException {
+    public static FileInfo fromPath(Path path) throws IOException {
         Preconditions.checkNotNull(path);
         final String content = Files.readString(path);
-        return FileInformation.fromPathWithContent(path, content);
+        return FileInfo.fromPathWithContent(path, content);
     }
 
-    public static FileInformation fromPathWithContent(Path path, String content) {
+    public static FileInfo fromPathWithContent(Path path, String content) {
         Preconditions.checkNotNull(path);
         Preconditions.checkNotNull(content);
 
         final FileKind kind = FileKind.inferFrom(path);
-        return new FileInformation(path, kind, content);
+        return new FileInfo(path, kind, content);
     }
 
     public Path path() {
