@@ -4,13 +4,13 @@ import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public abstract class GraphComponent {
-    private static final Logger logger = LogManager.getLogger(GraphComponent.class);
+public abstract class OldGraphComponent {
+    private static final Logger logger = LogManager.getLogger(OldGraphComponent.class);
 
     private final UniqueID id;
-    private final Graph graph;
+    private final OldGraph graph;
 
-    GraphComponent(UniqueID id, Graph graph) {
+    OldGraphComponent(UniqueID id, OldGraph graph) {
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(graph);
         this.id = id;
@@ -21,7 +21,7 @@ public abstract class GraphComponent {
         return id;
     }
 
-    public Graph graph() {
+    public OldGraph graph() {
         return graph;
     }
 

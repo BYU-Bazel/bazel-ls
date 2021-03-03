@@ -18,7 +18,7 @@ public class TestProg {
         String workspaceContent = Files.readString(workspacePath);
         logger.info("Workspace content:\n" + workspaceContent.substring(0, 150) + "...");
 
-        Graph graph = Graph.empty();
+        OldGraph graph = OldGraph.empty();
         {
             final FileInfo workspaceInfo = FileInfo.fromPath(workspacePath);
 

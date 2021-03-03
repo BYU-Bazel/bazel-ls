@@ -1,20 +1,20 @@
 package server.bazel.interp;
 
 public class SyncStartInfo {
-    private final GraphNode startNode;
+    private final OldGraphNode startNode;
 
-    private SyncStartInfo(GraphNode startNode) {
+    private SyncStartInfo(OldGraphNode startNode) {
         this.startNode = startNode;
     }
 
-    public GraphNode startNode() {
+    public OldGraphNode startNode() {
         return startNode;
     }
 
     public static class Builder {
-        private GraphNode startNode;
+        private OldGraphNode startNode;
 
-        public Builder setStartNode(GraphNode startNode) {
+        public Builder setStartNode(OldGraphNode startNode) {
             this.startNode = startNode;
             return this;
         }

@@ -1,20 +1,18 @@
 package server.bazel.interp;
 
 import com.google.common.base.Preconditions;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import server.utils.Observatory;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public final class GraphNode extends GraphComponent {
+public final class OldGraphNode extends OldGraphComponent {
     private final Element element;
-    private final Map<UniqueID, GraphEdge> inEdges;
-    private final Map<UniqueID, GraphEdge> outEdges;
-    private final Observatory<GraphNodeCallbacks> observatory;
+    private final Map<UniqueID, OldGraphEdge> inEdges;
+    private final Map<UniqueID, OldGraphEdge> outEdges;
+    private final Observatory<OldGraphNodeCallbacks> observatory;
 
-    private GraphNode(UniqueID id, Graph graph, Element element) {
+    private OldGraphNode(UniqueID id, OldGraph graph, Element element) {
         super(id, graph);
 
         Preconditions.checkNotNull(element);
@@ -36,7 +34,7 @@ public final class GraphNode extends GraphComponent {
         throw new ClassCastException();
     }
 
-    public Observatory<GraphNodeCallbacks> observatory() {
+    public Observatory<OldGraphNodeCallbacks> observatory() {
         return observatory;
     }
 
@@ -52,30 +50,30 @@ public final class GraphNode extends GraphComponent {
 
     }
 
-    public Iterable<GraphEdge> fowardDependencies() {
+    public Iterable<OldGraphEdge> fowardDependencies() {
         return outEdges.values();
     }
 
-    public boolean hasForwardDependencyOn(GraphNode other) {
+    public boolean hasForwardDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
         final UniqueID id = UniqueID.fromStartEndNodes(this, other);
         return outEdges.containsKey(id);
     }
 
-    public GraphEdge getForwardDependencyOn(GraphNode other) {
+    public OldGraphEdge getForwardDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
         final UniqueID id = UniqueID.fromStartEndNodes(this, other);
         return outEdges.get(id);
     }
 
-    public GraphEdge createForwardDependencyOn(GraphNode other) {
+    public OldGraphEdge createForwardDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
 
         if (hasForwardDependencyOn(other)) {
             return getForwardDependencyOn(other);
         }
 
-        final GraphEdge edge = GraphEdge.fromStartEnd(this, other);
+        final OldGraphEdge edge = OldGraphEdge.fromStartEnd(this, other);
         this.outEdges.put(edge.id(), edge);
         other.inEdges.put(edge.id(), edge);
 
@@ -85,14 +83,14 @@ public final class GraphNode extends GraphComponent {
         return edge;
     }
 
-    public GraphEdge removeFowardDependencyOn(GraphNode other) {
+    public OldGraphEdge removeFowardDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
 
         if (!hasForwardDependencyOn(other)) {
             return null;
         }
 
-        final GraphEdge edge = getForwardDependencyOn(other);
+        final OldGraphEdge edge = getForwardDependencyOn(other);
         this.outEdges.remove(edge.id());
         other.inEdges.remove(edge.id());
 
@@ -102,26 +100,26 @@ public final class GraphNode extends GraphComponent {
         return edge;
     }
 
-    public Iterable<GraphEdge> reverseDependencies() {
+    public Iterable<OldGraphEdge> reverseDependencies() {
         return inEdges.values();
     }
 
-    public boolean hasReverseDependencyOn(GraphNode other) {
+    public boolean hasReverseDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
         return other.hasForwardDependencyOn(this);
     }
 
-    public GraphEdge getReverseDependencyOn(GraphNode other) {
+    public OldGraphEdge getReverseDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
         return other.getForwardDependencyOn(this);
     }
 
-    public GraphEdge createReverseDependencyOn(GraphNode other) {
+    public OldGraphEdge createReverseDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
         return other.createForwardDependencyOn(this);
     }
 
-    public GraphEdge removeReverseDependencyOn(GraphNode other) {
+    public OldGraphEdge removeReverseDependencyOn(OldGraphNode other) {
         Preconditions.checkNotNull(other);
         return other.removeFowardDependencyOn(this);
     }

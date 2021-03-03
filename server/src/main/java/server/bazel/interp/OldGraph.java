@@ -8,25 +8,19 @@ import server.utils.Exceptions;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO:
-//  Each graph node has exactly one element. Create a way to bind those elements
-//  to the associated node (2way binding). This will make node creation easier.
-//  Finish setting up the graph with new changes. Note that the graph nodes don't
-//  have a generic parameter T because that parameter doesn't provide any benefit
-//  whatsover.
-public class Graph {
-    private static final Logger logger = LogManager.getLogger(Graph.class);
+public class OldGraph {
+    private static final Logger logger = LogManager.getLogger(OldGraph.class);
 
-    private final GraphNode root;
-    private final Map<UniqueID, GraphNode> nodes;
+    private final OldGraphNode root;
+    private final Map<UniqueID, OldGraphNode> nodes;
 
-    private Graph() {
-        root = new GraphNode<RootElement>();
+    private OldGraph() {
+        root = new OldGraphNode<RootElement>();
         nodes = new HashMap<>();
     }
 
-    public static Graph empty() {
-        final Graph graph = new Graph();
+    public static OldGraph empty() {
+        final OldGraph graph = new OldGraph();
         graph.nodes.put(graph.root.id(), graph.root);
         return graph;
     }
@@ -103,15 +97,15 @@ public class Graph {
         return nodes.containsKey(nodeID);
     }
 
-    private GraphNode getNode(UniqueID nodeID) {
+    private OldGraphNode getNode(UniqueID nodeID) {
         Preconditions.checkNotNull(nodeID);
         return nodes.get(nodeID);
     }
 
-    private <T extends GraphNode> T getNode(UniqueID nodeID, Class<T> clazz) {
+    private <T extends OldGraphNode> T getNode(UniqueID nodeID, Class<T> clazz) {
         Preconditions.checkNotNull(nodeID);
 
-        final GraphNode node = getNode(nodeID);
+        final OldGraphNode node = getNode(nodeID);
         if (node == null) {
             return null;
         }
@@ -124,7 +118,7 @@ public class Graph {
                 "inherit from the provided %s class.", nodeID, node.getClass(), clazz));
     }
 
-    private void addNode(GraphNode node) throws GraphException {
+    private void addNode(OldGraphNode node) throws GraphException {
         Preconditions.checkNotNull(node);
         if (containsNode(node.id())) {
             throw new GraphException("Node already exists.");
@@ -140,7 +134,7 @@ public class Graph {
             throw new GraphException("Node not found.");
         }
 
-        final GraphNode node = getNode(nodeID);
+        final OldGraphNode node = getNode(nodeID);
         nodes.remove(nodeID);
         root.removeFowardDependencyOn(node);
     }
