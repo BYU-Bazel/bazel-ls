@@ -1,7 +1,10 @@
 package server.bazel.interp;
 
 public enum ElementKind {
+    BUILD,
     FILE,
+    PKG,
     ROOT,
-    WORKSPACE_FILE,
+    TARGET,
+    WORKSPACE,
 }

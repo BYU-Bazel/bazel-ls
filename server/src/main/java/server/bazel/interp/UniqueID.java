@@ -33,15 +33,6 @@ public class UniqueID {
         return UniqueID.raw(uid, abs);
     }
 
-    public static UniqueID fromStartEndNodes(OldGraphNode start, OldGraphNode end) {
-        Preconditions.checkNotNull(start);
-        Preconditions.checkNotNull(end);
-
-        final String uid = Utility.hash(start.id().value + end.id().value);
-        final String friendly = "ID representing a path between two nodes";
-        return UniqueID.raw(uid, friendly);
-    }
-
     public String value() {
         return value;
     }

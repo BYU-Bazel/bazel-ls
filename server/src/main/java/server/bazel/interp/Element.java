@@ -6,7 +6,11 @@ import org.apache.logging.log4j.Logger;
 public abstract class Element {
     private static final Logger logger = LogManager.getLogger(Element.class);
 
-    public abstract ElementKind kind();
+    protected Element() {
+        super();
+    }
+
+    public abstract ElementKind elementKind();
 
     protected static Logger logger() {
         return logger;

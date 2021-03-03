@@ -1,24 +1,12 @@
 package server.bazel.interp;
 
-import com.google.common.base.Preconditions;
-
-import java.nio.file.Path;
-
-public class FileElement extends OldGraphNode {
-    private final Path path;
-
-    FileElement(OldGraphComponent.Args args, Path path) {
-        super(args);
-        Preconditions.checkNotNull(path);
-        this.path = path;
-    }
-
-    public Path path() {
-        return path;
+public abstract class FileElement extends Element {
+    protected FileElement() {
+        super();
     }
 
     @Override
-    public ElementKind nodeKind() {
+    public ElementKind elementKind() {
         return ElementKind.FILE;
     }
 
