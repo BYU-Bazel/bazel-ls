@@ -11,19 +11,17 @@ import java.util.regex.Pattern;
  */
 public class Label {
     private final WorkspaceID workspace;
-    private final boolean root;
     private final PkgID pkg;
-    private final TargetID name;
+    private final TargetID target;
 
-    private Label(WorkspaceID workspace, boolean root, PkgID pkg, TargetID name) {
+    private Label(WorkspaceID workspace, PkgID pkg, TargetID target) {
         this.workspace = workspace;
-        this.root = root;
         this.pkg = pkg;
-        this.name = name;
+        this.target = target;
     }
 
     /**
-     * Factory to parse labels from a string.. The value could be similar to any
+     * Factory to parse labels from a string. The value could be similar to any
      * of the following forms.
      * <p>
      * :name
@@ -39,47 +37,45 @@ public class Label {
      */
     public static Label parse(String value) throws LabelSyntaxException {
         final String workspaceRegex = "(?:@([a-zA-Z0-9._-]+))";
-        final String rootRegex = "(//)";
-        final String pkgRegex = "([a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*)";
-        final String nameRegex = "(?::([a-zA-Z0-9._-]+))";
-        final String fullRegex = String.format("^%s?%s?%s?%s?$", workspaceRegex, rootRegex, pkgRegex, nameRegex);
+        final String pkgRegex = "(?://([a-zA-Z0-9._-]*(?:/[a-zA-Z0-9._-]+)*))";
+        final String localityRegex = "(:)";
+        final String targetRegex = "([a-zA-Z0-9._-]+)";
+        final String fullRegex = String.format("^%s?%s?%s?%s?$",
+                workspaceRegex, pkgRegex, localityRegex, targetRegex);
 
         // Capturing Groups:
         // 0: Entire label string value.
         // 1: Workspace name (can be empty).
-        // 1: Root which represents "//" (can be empty).
-        // 2: Package (can be empty).
-        // 3: Name of rule (can be empty).
+        // 2: Package path (can be empty).
+        // 3: Target locality, e.g. ":" (can be empty).
+        // 4: Target name of rule (can be empty).
         final Pattern pattern = Pattern.compile(fullRegex);
         final Matcher matcher = pattern.matcher(value);
 
         // Construct a label from the capturing groups.
         Label label;
         if (matcher.find()) {
-            String workspaceValue = Nullability.nullableOr("", () -> matcher.group(1));
-            String rootValue = Nullability.nullableOr("", () -> matcher.group(2));
-            String pkgValue = Nullability.nullableOr("", () -> matcher.group(3));
-            String nameValue = Nullability.nullableOr("", () -> matcher.group(4));
+            final String workspaceValue = matcher.group(1);
+            final String pkgValue = matcher.group(2);
+            final String localityValue = matcher.group(3);
+            final String targetValue = matcher.group(4);
 
+            // If a target starts with a ":", it is a reference to a build normal target defined
+            // in Starlark code. Otherwise, the value will represent a source file reference.
+            final boolean hasLocality = localityValue != null;
+
+            // Create the Label. Packages can be empty, leaving just the `//` at the start.
             label = new Label(
-                    workspaceValue.isEmpty() ? null : WorkspaceID.fromString(workspaceValue),
-                    !rootValue.isEmpty(),
-                    pkgValue.isEmpty() ? null : PkgID.fromString(pkgValue),
-                    nameValue.isEmpty() ? null : TargetID.fromString(nameValue));
+                    workspaceValue == null  ? null : WorkspaceID.fromRaw(workspaceValue),
+                    pkgValue == null ? null : PkgID.fromRaw(pkgValue),
+                    targetValue == null ? null : TargetID.fromRaw(hasLocality, targetValue));
         } else {
-            throw new LabelSyntaxException();
+            throw new LabelSyntaxException("Invalid label syntax.");
         }
 
-        // Labels in the shape of `@//:` or `@:` are not supported.
-        if (!label.hasWorkspace() && !label.hasPkg() && !label.hasName()) {
+        // An empty label is not a label at all.
+        if (!label.hasWorkspace() && !label.hasPkg() && !label.hasTarget()) {
             throw new LabelSyntaxException("A label may not be empty.");
-        }
-
-        // Labels that don't have a root could be source file. A source file is valid
-        // iff it is referencing a file relative to wherever its declaration is in the
-        // file tree. Referencing sub files within that directory is not valid.
-        if (!label.hasWorkspace() && !label.hasRoot() && !label.hasName() && label.pkg().value().contains("/")) {
-            throw new LabelSyntaxException("A source file may not contain any \"/\" characters.");
         }
 
         return label;
@@ -94,31 +90,18 @@ public class Label {
      * @return Whether this label is a local reference.
      */
     public boolean isLocal() {
-        return !hasWorkspace() && !hasRoot() && !hasPkg() && hasName();
+        return !hasWorkspace() && !hasPkg() && hasTarget() && target().isLocal();
     }
 
     /**
      * Returns whether or not this is a source file reference. A label may only be a
-     * source file if it does not have a root, a workspace, or a name. The source file
+     * source file if it does not have a root, a workspace, or a path. The source file
      * value will effectively be the of the package value (pkg).
      *
      * @return Whether this label represents a source file.
      */
     public boolean isSourceFile() {
-        return !hasRoot() && !hasWorkspace() && hasPkg() && !hasName();
-    }
-
-    /**
-     * The workspace that this label resides in. For example, if a project depended
-     * on a rule from a Maven workspace `@maven//some/other:package`, then this
-     * parameter would be equal to `maven`.
-     * <p>
-     * If empty, this rule is a part of the current workspace.
-     *
-     * @return The workspace.
-     */
-    public WorkspaceID workspace() {
-        return workspace;
+        return !hasWorkspace() && !hasPkg() && hasTarget() && target().isSourceFile();
     }
 
     /**
@@ -129,20 +112,30 @@ public class Label {
     }
 
     /**
-     * The root value. This will be the the `//` immediately following a workspace
-     * or an implied workspace name. This may be left out, in which case this label
-     * could represent a source file or local rull dependency.
+     * The workspace that this label resides in. For example, if a project depended
+     * on a rule from a Maven workspace `@maven//some/other:package`, then the value
+     * of WorkspaceID would be equal to `maven`.
+     * <p>
+     * If empty, this rule is a part of the current workspace.
      *
-     * @return Whether the root field is declared in this label.
+     * @return The workspace.
      */
-    public boolean hasRoot() {
-        return root;
+    public WorkspaceID workspace() {
+        return workspace;
+    }
+
+    /**
+     * @return Whether the package field is declared in this label. This is defined
+     * by the existence of a `//` after the workspace name.
+     */
+    public boolean hasPkg() {
+        return pkg() != null;
     }
 
     /**
      * The package relative to the workspace file. For example, if a project depended
-     * on a rule from a Maven workspace `@maven//some/other:package`, then this
-     * parameter would be equal to `some/other`.
+     * on a rule from a Maven workspace `@maven//some/other:package`, then the value
+     * of the PkgID would be equal to `some/other`.
      *
      * @return The package.
      */
@@ -151,35 +144,28 @@ public class Label {
     }
 
     /**
-     * @return Whether the package field is declared in this label.
+     * @return Whether the target field is declared in this label.
      */
-    public boolean hasPkg() {
-        return pkg() != null;
+    public boolean hasTarget() {
+        return target() != null;
     }
 
     /**
-     * The name of the label. This will be the name provided on the declaring rule.
+     * The target of the label. This will be the target provided on the declaring rule.
      * For example, if a project depended on a rule from a Maven workspace
-     * `@maven//some/other:package_name`, then this parameter would be equal to
-     * `package_name`.
+     * `@maven//some/other:package_name`, then the value of the target would be equal
+     * to `package_name`.
      *
-     * @return The name.
+     * @return The target.
      */
-    public TargetID name() {
-        return name;
+    public TargetID target() {
+        return target;
     }
 
     /**
-     * @return Whether the name field is declared in this label.
-     */
-    public boolean hasName() {
-        return name() != null;
-    }
-
-    /**
-     * Converts this label into its string literal form. An example of a string
-     * literal form would be `@maven//path/to:package`. Assumes that this label
-     * has been correctly instantiated.
+     * Converts this label into its string literal form. An example of a string literal
+     * form would be `@maven//path/to:package`. Assumes that this label has been correctly
+     * instantiated.
      *
      * @return A string literal label value.
      */
@@ -188,22 +174,17 @@ public class Label {
 
         // Append the "@workspace" if specified.
         if (hasWorkspace()) {
-            builder.append(String.format("@%s", workspace()));
+            builder.append(workspace().toString());
         }
 
-        // Append the "//" if specified.
-        if (hasRoot()) {
-            builder.append("//");
-        }
-
-        // Append the "path/to/package" if specified.
+        // Append the "//path/to/package" if specified.
         if (hasPkg()) {
-            builder.append(pkg());
+            builder.append(pkg().toString());
         }
 
         // Append the ":name_of_package" if specified.
-        if (hasName()) {
-            builder.append(String.format(":%s", name()));
+        if (hasTarget()) {
+            builder.append(target().toString());
         }
 
         return builder.toString();
@@ -225,13 +206,12 @@ public class Label {
         if (!(o instanceof Label)) return false;
         Label label = (Label) o;
         return Objects.equals(workspace, label.workspace) &&
-                Objects.equals(root, label.root) &&
                 Objects.equals(pkg, label.pkg) &&
-                Objects.equals(name, label.name);
+                Objects.equals(target, label.target);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(workspace, root, pkg, name);
+        return Objects.hash(workspace, pkg, target);
     }
 }

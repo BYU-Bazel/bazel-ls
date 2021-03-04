@@ -10,8 +10,8 @@ public class LabelTest {
         Label l = Label.parse(value);
 
         Assert.assertFalse(l.hasWorkspace());
-        Assert.assertEquals(PkgID.fromString("path/to"), l.pkg());
-        Assert.assertEquals(TargetID.fromString("target"), l.name());
+        Assert.assertEquals(PkgID.fromRaw("path/to"), l.pkg());
+        Assert.assertEquals(TargetID.fromRaw(true, "target"), l.target());
         Assert.assertFalse(l.isLocal());
         Assert.assertFalse(l.isSourceFile());
     }
@@ -23,8 +23,23 @@ public class LabelTest {
 
         Assert.assertFalse(l.hasWorkspace());
         Assert.assertFalse(l.hasPkg());
-        Assert.assertEquals(TargetID.fromString("something"), l.name());
+        Assert.assertEquals(TargetID.fromRaw(true, "something"), l.target());
         Assert.assertTrue(l.isLocal());
+        Assert.assertFalse(l.isSourceFile());
+    }
+
+    @Test
+    public void test_parse_referenceRootPackage() throws LabelSyntaxException {
+        String value = "@repo//:something";
+        Label l = Label.parse(value);
+
+        // This label has all parts, but the path is pointing to the root.
+        Assert.assertTrue(l.hasWorkspace());
+        Assert.assertTrue(l.hasPkg());
+        Assert.assertTrue(l.hasTarget());
+
+        Assert.assertEquals(TargetID.fromRaw(true, "something"), l.target());
+        Assert.assertFalse(l.isLocal());
         Assert.assertFalse(l.isSourceFile());
     }
 
@@ -55,9 +70,9 @@ public class LabelTest {
         String value = "@foo";
         Label l = Label.parse(value);
 
-        Assert.assertEquals(WorkspaceID.fromString("foo"), l.workspace());
+        Assert.assertEquals(WorkspaceID.fromRaw("foo"), l.workspace());
         Assert.assertFalse(l.hasPkg());
-        Assert.assertFalse(l.hasName());
+        Assert.assertFalse(l.hasTarget());
         Assert.assertFalse(l.isLocal());
         Assert.assertFalse(l.isSourceFile());
     }
@@ -68,8 +83,12 @@ public class LabelTest {
         Label l = Label.parse(value);
 
         Assert.assertFalse(l.hasWorkspace());
-        Assert.assertEquals(PkgID.fromString("hello_world.cc"), l.pkg());
-        Assert.assertFalse(l.hasName());
+        Assert.assertFalse(l.hasPkg());
+
+        Assert.assertTrue(l.hasTarget());
+        Assert.assertTrue(l.target().isSourceFile());
+        Assert.assertEquals(TargetID.fromRaw(false, "hello_world.cc"), l.target());
+
         Assert.assertTrue(l.isSourceFile());
         Assert.assertFalse(l.isLocal());
     }
@@ -78,9 +97,14 @@ public class LabelTest {
     public void test_parse_sourceFileWithoutExtension() throws LabelSyntaxException {
         String value = "hello";
         Label l = Label.parse(value);
+
         Assert.assertFalse(l.hasWorkspace());
-        Assert.assertEquals(PkgID.fromString("hello"), l.pkg());
-        Assert.assertFalse(l.hasName());
+        Assert.assertFalse(l.hasPkg());
+
+        Assert.assertTrue(l.hasTarget());
+        Assert.assertTrue(l.target().isSourceFile());
+        Assert.assertEquals(TargetID.fromRaw(false, "hello"), l.target());
+
         Assert.assertTrue(l.isSourceFile());
         Assert.assertFalse(l.isLocal());
     }

@@ -9,7 +9,6 @@ public abstract class LabelPart {
 
     protected LabelPart(String value) {
         Preconditions.checkNotNull(value);
-        Preconditions.checkArgument(!value.isEmpty(), "A label part must not be empty.");
         this.value = value;
     }
 
@@ -17,10 +16,11 @@ public abstract class LabelPart {
         return value;
     }
 
+    /**
+     * @return The value of this LabelPart as it should appear in a full Label.
+     */
     @Override
-    public String toString() {
-        return value;
-    }
+    public abstract String toString();
 
     @Override
     public boolean equals(Object o) {

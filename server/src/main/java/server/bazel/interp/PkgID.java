@@ -5,7 +5,18 @@ public class PkgID extends LabelPart {
         super(value);
     }
 
-    public static PkgID fromString(String value) {
+    /**
+     * Creates a PkgID from raw values.
+     *
+     * @param value The value or name of the package. E.g. `path/to/etc`.
+     * @return A PkgID.
+     */
+    public static PkgID fromRaw(String value) {
         return new PkgID(value);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("//%s", value());
     }
 }
