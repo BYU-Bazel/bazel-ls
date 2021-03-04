@@ -11,6 +11,8 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
 import server.buildifier.Buildifier;
+import server.codelens.CodeLensProvider;
+import server.codelens.CodeLensResolver;
 import server.completion.CompletionProvider;
 import server.diagnostics.DiagnosticParams;
 import server.diagnostics.DiagnosticsProvider;
@@ -205,4 +207,18 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
             return CompletableFuture.completedFuture(new ArrayList<TextEdit>());
         }
     }
+
+    @Override
+    public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
+		logger.info("CodeLens request received");
+        CodeLensProvider codeLensProvider = new CodeLensProvider(DocumentTracker.getInstance());
+        return codeLensProvider.getCodeLens(params);
+	}
+
+    @Override
+    public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
+		logger.info("CodeLens resolve request received");
+        CodeLensResolver codeLensResolver = new CodeLensResolver();
+        return codeLensResolver.resolveCodeLens(unresolved);
+	}
 }
