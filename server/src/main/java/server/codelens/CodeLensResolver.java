@@ -12,6 +12,9 @@ public class CodeLensResolver {
 
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
         logger.info("CodeLens Resolver invoked");
-        return null;
+
+        logger.info("Recieved command: " + unresolved.getCommand().getCommand());
+
+        return null; // TODO resolve the passed codelens
     }
 }

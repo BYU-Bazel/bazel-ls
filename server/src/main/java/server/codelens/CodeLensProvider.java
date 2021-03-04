@@ -1,12 +1,17 @@
 package server.codelens;
 
 import java.util.concurrent.CompletableFuture;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 
 import server.utils.DocumentTracker;
 
@@ -22,6 +27,20 @@ public class CodeLensProvider {
 
     public CompletableFuture<List<? extends CodeLens>> getCodeLens(CodeLensParams params) {
         logger.info("CodeLens Provider invoked");
-        return null;
+
+        String contents = documentTracker.getContents(new URI(params.getTextDocument().getUri()));
+
+        CodeLens dummy = new CodeLens();
+        Range range = new Range(new Position(4, 0), new Position(4, 13));
+        Command command = new Command();
+        command.setTitle("Do Nothing");
+        command.setCommand(CommandConstants.none);
+        dummy.setRange(range);
+        dummy.setCommand(command);
+
+        
+
+        return CompletableFuture.completedFuture(Arrays.asList(dummy));
     }
+
 }
