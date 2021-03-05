@@ -2,7 +2,7 @@ package server.bazel.interp;
 
 public class PkgElement extends Element {
     @Override
-    public ElementKind elementKind() {
+    public ElementKind kind() {
         return ElementKind.PKG;
     }
 }

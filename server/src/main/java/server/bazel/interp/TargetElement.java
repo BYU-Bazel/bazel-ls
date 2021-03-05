@@ -6,7 +6,7 @@ public class TargetElement extends Element {
     }
 
     @Override
-    public ElementKind elementKind() {
+    public ElementKind kind() {
         return ElementKind.TARGET;
     }
 }

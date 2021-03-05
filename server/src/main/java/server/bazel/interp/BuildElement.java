@@ -6,7 +6,7 @@ public class BuildElement extends FileElement {
     }
 
     @Override
-    public ElementKind elementKind() {
+    public ElementKind kind() {
         return ElementKind.BUILD;
     }
 

@@ -15,7 +15,6 @@ public class FileInfo {
         Preconditions.checkNotNull(path);
         Preconditions.checkNotNull(kind);
         Preconditions.checkNotNull(content);
-
         this.path = path;
         this.kind = kind;
         this.content = content;
@@ -30,7 +29,6 @@ public class FileInfo {
     public static FileInfo fromPathWithContent(Path path, String content) {
         Preconditions.checkNotNull(path);
         Preconditions.checkNotNull(content);
-
         final FileKind kind = FileKind.inferFrom(path);
         return new FileInfo(path, kind, content);
     }
