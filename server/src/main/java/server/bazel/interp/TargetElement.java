@@ -9,4 +9,9 @@ public class TargetElement extends Element {
     public ElementKind kind() {
         return ElementKind.TARGET;
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
 }

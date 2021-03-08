@@ -9,7 +9,6 @@ public final class GraphNode<T extends Element> implements GraphLifecycle {
     private final Graph graph;
     private final UniqueID id;
     private final T element;
-    private final GraphNodeContext context;
     private final Map<UniqueID, GraphNode<?>> forwardEdges;
     private final Map<UniqueID, GraphNode<?>> reverseEdges;
 
@@ -21,7 +20,6 @@ public final class GraphNode<T extends Element> implements GraphLifecycle {
         this.graph = graph;
         this.id = id;
         this.element = element;
-        this.context = GraphNodeContext.empty();
         this.forwardEdges = new HashMap<>();
         this.reverseEdges = new HashMap<>();
     }
@@ -44,10 +42,6 @@ public final class GraphNode<T extends Element> implements GraphLifecycle {
             return type.cast(element());
         }
         throw new ClassCastException();
-    }
-
-    public GraphNodeContext context() {
-        return context;
     }
 
     public Iterable<GraphNode<?>> forwardEdges() {

@@ -77,6 +77,7 @@ public class Graph {
         return nodes.containsKey(id);
     }
 
+    // TODO: add graph context.
     public void addNode(GraphNode<?> node) {
         Preconditions.checkNotNull(node);
 
@@ -89,11 +90,13 @@ public class Graph {
         node.onSync();
     }
 
+    // TODO: add graph context.
     public void syncNode(UniqueID id) {
         Preconditions.checkNotNull(id);
         getNode(id).onSync();
     }
 
+    // TODO: add graph context.
     public void removeNode(UniqueID id) {
         Preconditions.checkNotNull(id);
         getNode(id).onSync();

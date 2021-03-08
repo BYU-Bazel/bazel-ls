@@ -14,4 +14,20 @@ public class BuildElement extends FileElement {
     public FileKind fileKind() {
         return FileKind.BUILD;
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onSync() {
+        super.onSync();
+    }
+
+    @Override
+    public void onFinish() {
+        super.onFinish();
+    }
 }
+

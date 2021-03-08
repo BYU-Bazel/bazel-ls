@@ -2,15 +2,15 @@ package server.bazel.interp;
 
 import server.utils.Context;
 
-public class GraphNodeContext extends Context {
+public class GraphContext extends Context {
     private UniqueID creator;
 
-    private GraphNodeContext() {
+    private GraphContext() {
         super();
     }
 
-    public static GraphNodeContext empty() {
-        return new GraphNodeContext();
+    public static GraphContext empty() {
+        return new GraphContext();
     }
 
     public boolean hasCreator() {
