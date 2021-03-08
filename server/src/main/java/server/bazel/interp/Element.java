@@ -1,38 +1,68 @@
 package server.bazel.interp;
 
+import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * TODO:
- * Element has to have a referene to the node
- * Element has to be created
- * Element should have a getter for the graph and the node, graph is referenced through the ndoe
- * Node should have a reference to the graph
- * Node should have a big constructor that passes in: Element, NodeID, and Graph
- */
-public abstract class Element {
+import javax.annotation.Nonnull;
+
+public abstract class Element implements GraphLifecycle {
     private static final Logger logger = LogManager.getLogger(Element.class);
+
+    private GraphNode<?> node;
+    private boolean initialized;
 
     protected Element() {
         super();
+        this.node = null;
+        this.initialized = false;
     }
 
     public abstract ElementKind kind();
 
+    @Nonnull
     protected static Logger logger() {
         return logger;
     }
 
-    protected void onStart() {
+    public boolean initialized() {
+        return initialized;
+    }
+
+    @Nonnull
+    public GraphNode<?> node() {
+        return node;
+    }
+
+    @Nonnull
+    public Graph graph() {
+        return node().graph();
+    }
+
+    public final void initialize(ElementArgs args) {
+        Preconditions.checkNotNull(args);
+        Preconditions.checkNotNull(args.getNode());
+
+        if (initialized()) {
+            throw new GraphRuntimeException("Element already initialized.");
+        }
+
+        initialized = true;
+        node = args.getNode();
+    }
+
+    @Override
+    public void onStart() {
 
     }
 
-    protected void onSync() {
+    @Override
+    public void onSync() {
 
     }
 
-    protected void onFinish() {
+    @Override
+    public void onFinish() {
 
     }
 }

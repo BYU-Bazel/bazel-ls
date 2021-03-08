@@ -18,36 +18,57 @@ public class Graph {
         return new Graph();
     }
 
-    public UniqueID addWorkspaceFile(FileInfo info) {
+    public UniqueID addFile(FileInfo info) {
         Preconditions.checkNotNull(info);
-        Preconditions.checkArgument(info.kind() == FileKind.WORKSPACE);
 
         final UniqueID id = UniqueID.fromPath(info.path());
-        final WorkspaceElement element = new WorkspaceElement();
-        final GraphNode<WorkspaceElement> node = new GraphNode<>(id, element);
+        final GraphNode<?> node;
+        switch (info.kind()) {
+            case WORKSPACE:
+                final WorkspaceElement element = new WorkspaceElement();
+                node = new GraphNode<>(this, id, element);
+                break;
+            case BUILD:
+            case BAZEL:
+            default:
+                throw new Exceptions.Unimplemented();
+        }
 
         addNode(node);
         return id;
     }
 
-    public void syncWorkspaceFile(FileInfo info) {
+    public boolean containsFile(FileInfo info) {
         Preconditions.checkNotNull(info);
-        Preconditions.checkArgument(info.kind() == FileKind.WORKSPACE);
+        final UniqueID id = UniqueID.fromPath(info.path());
+        return containsNode(id);
+    }
 
+    public GraphNode<?> getFile(FileInfo info) {
+        Preconditions.checkNotNull(info);
+        final UniqueID id = UniqueID.fromPath(info.path());
+        return getNode(id);
+    }
+
+    public void syncFile(FileInfo info) {
+        Preconditions.checkNotNull(info);
         final UniqueID id = UniqueID.fromPath(info.path());
         syncNode(id);
     }
 
-    public void removeWorkspaceFile(FileInfo info) {
+    public void removeFile(FileInfo info) {
         Preconditions.checkNotNull(info);
-        Preconditions.checkArgument(info.kind() == FileKind.WORKSPACE);
-
         final UniqueID id = UniqueID.fromPath(info.path());
         removeNode(id);
     }
 
     public GraphNode<?> getNode(UniqueID id) {
         Preconditions.checkNotNull(id);
+
+        if (!containsNode(id)) {
+            throw new GraphRuntimeException("Node not contained in graph.");
+        }
+
         return nodes.get(id);
     }
 
@@ -58,20 +79,25 @@ public class Graph {
 
     public void addNode(GraphNode<?> node) {
         Preconditions.checkNotNull(node);
+
+        if (containsNode(node.id())) {
+            throw new GraphRuntimeException("Node already contained in graph.");
+        }
+
         nodes.put(node.id(), node);
-        node.start();
-        node.sync();
+        node.onStart();
+        node.onSync();
     }
 
     public void syncNode(UniqueID id) {
         Preconditions.checkNotNull(id);
-        getNode(id).sync();
+        getNode(id).onSync();
     }
 
     public void removeNode(UniqueID id) {
         Preconditions.checkNotNull(id);
-        getNode(id).sync();
-        getNode(id).finish();
+        getNode(id).onSync();
+        getNode(id).onFinish();
         nodes.remove(id);
     }
 }
