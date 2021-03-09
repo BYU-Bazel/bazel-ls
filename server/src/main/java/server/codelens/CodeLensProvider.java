@@ -16,11 +16,11 @@ import org.eclipse.lsp4j.Range;
 import server.utils.DocumentTracker;
 
 public class CodeLensProvider {
-    
+
     private static final Logger logger = LogManager.getLogger(CodeLensProvider.class);
 
     private DocumentTracker documentTracker;
-    
+
     public CodeLensProvider(DocumentTracker documentTracker) {
         this.documentTracker = documentTracker;
     }
@@ -28,7 +28,12 @@ public class CodeLensProvider {
     public CompletableFuture<List<? extends CodeLens>> getCodeLens(CodeLensParams params) {
         logger.info("CodeLens Provider invoked");
 
-        String contents = documentTracker.getContents(new URI(params.getTextDocument().getUri()));
+        String contents = "";
+        try {
+            contents = documentTracker.getContents(new URI(params.getTextDocument().getUri()));
+        } catch (Exception e) {
+            logger.error(e);
+        }
 
         CodeLens dummy = new CodeLens();
         Range range = new Range(new Position(4, 0), new Position(4, 13));
@@ -38,7 +43,6 @@ public class CodeLensProvider {
         dummy.setRange(range);
         dummy.setCommand(command);
 
-        
 
         return CompletableFuture.completedFuture(Arrays.asList(dummy));
     }
