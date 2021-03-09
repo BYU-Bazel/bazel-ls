@@ -13,6 +13,7 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 import server.buildifier.Buildifier;
 import server.codelens.CodeLensProvider;
 import server.codelens.CodeLensResolver;
+import server.commands.CommandProvider;
 import server.completion.CompletionProvider;
 import server.diagnostics.DiagnosticParams;
 import server.diagnostics.DiagnosticsProvider;
@@ -34,10 +35,12 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     private LanguageClient languageClient;
     private DiagnosticsProvider diagnosticsProvider;
+    private CommandProvider commandProvider;
 
     public BazelServices() {
         languageClient = null;
         diagnosticsProvider = new DiagnosticsProvider();
+        commandProvider = new CommandProvider();
     }
 
     @Override
@@ -210,15 +213,21 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     @Override
     public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-		logger.info("CodeLens request received");
+        logger.info("CodeLens request received");
         CodeLensProvider codeLensProvider = new CodeLensProvider(DocumentTracker.getInstance());
         return codeLensProvider.getCodeLens(params);
-	}
+    }
 
     @Override
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
-		logger.info("CodeLens resolve request received");
+        logger.info("CodeLens resolve request received");
         CodeLensResolver codeLensResolver = new CodeLensResolver();
         return codeLensResolver.resolveCodeLens(unresolved);
-	}
+    }
+
+    @Override
+    public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
+        logger.info(String.format("Execute command with args\n%s", params.toString()));
+        return commandProvider.executeCommand(params);
+    }
 }
