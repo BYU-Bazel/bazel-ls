@@ -27,6 +27,13 @@ public final class Callbacks {
     }
 
     /**
+     * A functional interface which represents an event.
+     */
+    public interface Event {
+        void invoke();
+    }
+
+    /**
      * A functional interface which takes in an argument and returns a result.
      *
      * @param <R> The type of the result.

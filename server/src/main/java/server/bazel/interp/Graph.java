@@ -1,6 +1,7 @@
 package server.bazel.interp;
 
 import com.google.common.base.Preconditions;
+import server.utils.Callbacks;
 import server.utils.Exceptions;
 
 import java.util.HashMap;
@@ -8,14 +9,26 @@ import java.util.Map;
 
 public class Graph {
     private final Map<UniqueID, GraphNode<?>> nodes;
+    private final GraphContext context;
+    private boolean running;
 
     private Graph() {
         super();
         this.nodes = new HashMap<>();
+        this.context = GraphContext.empty();
+        this.running = false;
     }
 
     public static Graph empty() {
         return new Graph();
+    }
+
+    public GraphContext context() {
+        if (!running) {
+            throw new GraphRuntimeException("No context active.");
+        }
+
+        return this.context;
     }
 
     public UniqueID addFile(FileInfo info) {
@@ -77,7 +90,6 @@ public class Graph {
         return nodes.containsKey(id);
     }
 
-    // TODO: add graph context.
     public void addNode(GraphNode<?> node) {
         Preconditions.checkNotNull(node);
 
@@ -86,21 +98,56 @@ public class Graph {
         }
 
         nodes.put(node.id(), node);
+
+//        wrapWithRunningContext((ctx) ->
+
+        boolean isStartingPoint = !running;
+        if (isStartingPoint) {
+            this.running = true;
+            context.clear();
+        }
         node.onStart();
-        node.onSync();
+        if (isStartingPoint) {
+            context.clear();
+            this.running = false;
+        }
+
+        syncNode(node.id());
     }
 
-    // TODO: add graph context.
     public void syncNode(UniqueID id) {
         Preconditions.checkNotNull(id);
         getNode(id).onSync();
     }
 
-    // TODO: add graph context.
     public void removeNode(UniqueID id) {
         Preconditions.checkNotNull(id);
-        getNode(id).onSync();
+
+        syncNode(id);
+
         getNode(id).onFinish();
         nodes.remove(id);
+    }
+
+    private void wrapWithRunningContext(
+            Callbacks.Consumer<GraphContext> initContextCallback,
+            Callbacks.Event runCallback
+    ) {
+        Preconditions.checkNotNull(initContextCallback);
+        Preconditions.checkNotNull(runCallback);
+
+        boolean isStartingPoint = !running;
+        if (isStartingPoint) {
+            this.running = true;
+            context().clear();
+            initContextCallback.invoke(context());
+        }
+
+        runCallback.invoke();
+
+        if (isStartingPoint) {
+            context().clear();
+            this.running = false;
+        }
     }
 }
