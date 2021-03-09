@@ -7,6 +7,7 @@ java_library(
     srcs = [
         "CodeLensProvider.java",
         "CodeLensResolver.java",
+        "CommandConstants.java",
     ],
     deps = [
         "//server/src/main/java/server/utils",

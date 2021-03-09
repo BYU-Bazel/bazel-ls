@@ -28,10 +28,10 @@ public class CodeLensProvider {
     public CompletableFuture<List<? extends CodeLens>> getCodeLens(CodeLensParams params) {
         logger.info("CodeLens Provider invoked");
 
-        String contents = documentTracker.getContents(new URI(params.getTextDocument().getUri()));
+        //String contents = documentTracker.getContents(new URI(params.getTextDocument().getUri()));
 
         CodeLens dummy = new CodeLens();
-        Range range = new Range(new Position(4, 0), new Position(4, 13));
+        Range range = new Range(new Position(8, 0), new Position(8, 9));
         Command command = new Command();
         command.setTitle("Do Nothing");
         command.setCommand(CommandConstants.none);
