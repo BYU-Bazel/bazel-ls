@@ -23,9 +23,15 @@ public class Graph {
         return new Graph();
     }
 
+    /**
+     * The currently active graph context. This may only be accessed during a `node sync`, `node start`,
+     * or `node finish`. Accessing it any other context will throw a runtime exception.
+     *
+     * @return The currently active graph context.
+     */
     public GraphContext context() {
         if (!running) {
-            throw new GraphRuntimeException("No context active.");
+            throw new GraphRuntimeException("No active context available.");
         }
 
         return this.context;
@@ -99,33 +105,50 @@ public class Graph {
 
         nodes.put(node.id(), node);
 
-//        wrapWithRunningContext((ctx) ->
+        // Start the node with a context.
+        wrapWithRunningContext(
+                (context) -> {
+                    GraphStartInfo startInfo = new GraphStartInfo();
+                    startInfo.setStartNodeID(node.id());
+                    context.put(GraphStartInfo.class, startInfo);
+                },
+                node::onStart
+        );
 
-        boolean isStartingPoint = !running;
-        if (isStartingPoint) {
-            this.running = true;
-            context.clear();
-        }
-        node.onStart();
-        if (isStartingPoint) {
-            context.clear();
-            this.running = false;
-        }
-
+        // Sync the node after addition.
         syncNode(node.id());
     }
 
     public void syncNode(UniqueID id) {
         Preconditions.checkNotNull(id);
-        getNode(id).onSync();
+
+        // Sync the node with a context.
+        wrapWithRunningContext(
+                (context) -> {
+                    GraphStartInfo startInfo = new GraphStartInfo();
+                    startInfo.setStartNodeID(id);
+                    context.put(GraphStartInfo.class, startInfo);
+                },
+                getNode(id)::onSync
+        );
     }
 
     public void removeNode(UniqueID id) {
         Preconditions.checkNotNull(id);
 
+        // Sync the node before removal.
         syncNode(id);
 
-        getNode(id).onFinish();
+        // Finish the node with a context.
+        wrapWithRunningContext(
+                (context) -> {
+                    GraphStartInfo startInfo = new GraphStartInfo();
+                    startInfo.setStartNodeID(id);
+                    context.put(GraphStartInfo.class, startInfo);
+                },
+                getNode(id)::onFinish
+        );
+
         nodes.remove(id);
     }
 

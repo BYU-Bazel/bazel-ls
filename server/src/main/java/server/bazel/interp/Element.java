@@ -39,6 +39,11 @@ public abstract class Element implements GraphLifecycle {
         return node().graph();
     }
 
+    @Nonnull
+    public GraphContext context() {
+        return graph().context();
+    }
+
     public final void initialize(ElementArgs args) {
         Preconditions.checkNotNull(args);
         Preconditions.checkNotNull(args.getNode());

@@ -28,6 +28,10 @@ public final class GraphNode<T extends Element> implements GraphLifecycle {
         return graph;
     }
 
+    public GraphContext context() {
+        return graph().context();
+    }
+
     public UniqueID id() {
         return id;
     }

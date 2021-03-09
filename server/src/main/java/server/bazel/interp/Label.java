@@ -1,7 +1,5 @@
 package server.bazel.interp;
 
-import server.utils.Nullability;
-
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
