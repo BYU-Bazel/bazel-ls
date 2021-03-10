@@ -10,6 +10,7 @@ import server.bazel.tree.WorkspaceTree;
 import server.bazel.tree.WorkspaceTree.Node;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +48,7 @@ public class WorkspaceAPI {
         ArrayList<Path> allPossiblePaths = new ArrayList<>();
         List<Package> allPossiblePackages = findNodeOfGivenPackagePath(currentPath).getAllPackagesOfChildren();
         for(Package childPackage: allPossiblePackages){
-            allPossiblePaths.add(Path.of(childPackage.getPackageName()));
+            allPossiblePaths.add(Paths.get(childPackage.getPackageName()));
         }
         return allPossiblePaths;
     }
@@ -138,7 +139,7 @@ public class WorkspaceAPI {
             }
             buildPathString.append("/BUILD");
         }
-        return Path.of(buildPathString.toString());
+        return Paths.get(buildPathString.toString());
 
     }
 
@@ -159,7 +160,7 @@ public class WorkspaceAPI {
             String pathSection = path.getName(i).toString();
             if(!pathSection.contains(".")){
                 Optional<Node> potentialNode = lastNode.getChild(pathSection);
-                if (potentialNode.isEmpty()) {
+                if (!potentialNode.isPresent()) {
                     throw new WorkspaceAPIException("Invalid Path");
                 } else {
                     lastNode = potentialNode.get();

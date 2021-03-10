@@ -47,7 +47,7 @@ public class DiagnosticsProvider {
         final WorkspaceAPI api = new WorkspaceAPI(tree);
 
         final URI textDocURI = params.getUri();
-        final Path textDocPath = Path.of(textDocURI);
+        final Path textDocPath = Paths.get(textDocURI);
         final String textDocContent = DocumentTracker.getInstance().getContents(textDocURI);
 
         final List<Diagnostic> diagnostics = new ArrayList<>();

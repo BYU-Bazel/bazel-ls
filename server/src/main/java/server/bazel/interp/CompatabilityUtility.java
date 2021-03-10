@@ -5,6 +5,7 @@ import server.bazel.tree.BuildTarget;
 import server.workspace.Workspace;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A compatability utilty to help bridge compatability between this package and
@@ -30,22 +31,22 @@ public class CompatabilityUtility {
             Preconditions.checkNotNull(path);
             Preconditions.checkArgument(label.hasName());
             path = toWorkspaceLocal(path);
-            return new BuildTarget(Path.of("//" + path), label.name(), null);
+            return new BuildTarget(Paths.get("//" + path), label.name(), null);
         }
 
         if (label.hasPkg() && label.hasName()) {
-            return new BuildTarget(Path.of("//" + label.pkg()), label.name(), null);
+            return new BuildTarget(Paths.get("//" + label.pkg()), label.name(), null);
         }
 
         if (!label.hasName()) {
             // Handle implied packages.
             final String[] parts = label.pkg().split("/");
             final String lastPackageName = parts[parts.length - 1];
-            return new BuildTarget(Path.of("//" + label.pkg()), lastPackageName, null);
+            return new BuildTarget(Paths.get("//" + label.pkg()), lastPackageName, null);
         }
 
         // It only has the name.
-        return new BuildTarget(Path.of("//"), label.name(), null);
+        return new BuildTarget(Paths.get("//"), label.name(), null);
     }
 
     // TODO(josiahsrc): This behavior should be implied by interp.
@@ -69,6 +70,6 @@ public class CompatabilityUtility {
             }
         }
 
-        return Path.of(builder.toString());
+        return Paths.get(builder.toString());
     }
 }
