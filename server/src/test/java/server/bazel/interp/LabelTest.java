@@ -118,4 +118,11 @@ public class LabelTest {
         Assert.assertTrue(l.isSourceFile());
         Assert.assertFalse(l.isLocal());
     }
+
+    @Test
+    public void test_parse_returnsSameStringBack() throws LabelSyntaxException {
+        String value = "@repo//path/to:my/src/file.cc";
+        Label l = Label.parse(value);
+        Assert.assertEquals(value, l.value());
+    }
 }
