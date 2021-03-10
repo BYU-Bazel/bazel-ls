@@ -3,7 +3,6 @@ package server.workspace;
 import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import server.bazel.bazelWorkspaceAPI.WorkspaceAPI;
 import server.bazel.cli.Bazel;
 import server.bazel.cli.BazelServerException;
 import server.bazel.tree.BuildTarget;
