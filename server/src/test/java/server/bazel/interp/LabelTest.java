@@ -78,6 +78,16 @@ public class LabelTest {
     }
 
     @Test
+    public void test_parse_sourceFileFromAbsoluteReference() throws LabelSyntaxException {
+        String value = "@repo//path/to:my/src/file.cc";
+        Label l = Label.parse(value);
+
+        Assert.assertEquals(l.workspace(), WorkspaceID.fromRaw("repo"));
+        Assert.assertEquals(l.pkg(), PkgID.fromRaw("path/to"));
+        Assert.assertEquals(TargetID.fromRaw(true, "my/src/file.cc"), l.target());
+    }
+
+    @Test
     public void test_parse_sourceFileWithExtension() throws LabelSyntaxException {
         String value = "hello_world.cc";
         Label l = Label.parse(value);

@@ -1,5 +1,7 @@
 package server.bazel.interp;
 
+import server.utils.Nullability;
+
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,48 +37,57 @@ public class Label {
      */
     public static Label parse(String value) throws LabelSyntaxException {
         final String workspaceRegex = "(?:@([a-zA-Z0-9._-]+))";
-        final String pkgRegex = "(?://([a-zA-Z0-9._-]*(?:/[a-zA-Z0-9._-]+)*))";
+        final String rootRegex = "(//)";
+        final String pkgRegex = "([a-zA-Z0-9._-]*(?:/[a-zA-Z0-9._-]+)*)";
         final String localityRegex = "(:)";
-        final String targetRegex = "([a-zA-Z0-9._-]+)";
-        final String fullRegex = String.format("^%s?%s?%s?%s?$",
-                workspaceRegex, pkgRegex, localityRegex, targetRegex);
+        final String targetRegex = "([a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*)";
+        final String fullRegex = String.format("^%s?(?:%s%s)?(?:%s?%s)?$", workspaceRegex, rootRegex,
+                pkgRegex, localityRegex, targetRegex);
 
         // Capturing Groups:
         // 0: Entire label string value.
         // 1: Workspace name (can be empty).
-        // 2: Package path (can be empty).
-        // 3: Target locality, e.g. ":" (can be empty).
-        // 4: Target name of rule (can be empty).
+        // 2: Root indicator, e.g. "//" (can be empty).
+        // 3: Package path (can be empty).
+        // 4: Locality indicator, e.g. ":" (can be empty).
+        // 5: Target name of rule (can be empty).
         final Pattern pattern = Pattern.compile(fullRegex);
         final Matcher matcher = pattern.matcher(value);
 
         // Construct a label from the capturing groups.
-        Label label;
-        if (matcher.find()) {
-            final String workspaceValue = matcher.group(1);
-            final String pkgValue = matcher.group(2);
-            final String localityValue = matcher.group(3);
-            final String targetValue = matcher.group(4);
-
-            // If a target starts with a ":", it is a reference to a build normal target defined
-            // in Starlark code. Otherwise, the value will represent a source file reference.
-            final boolean hasLocality = localityValue != null;
-
-            // Create the Label. Packages can be empty, leaving just the `//` at the start.
-            label = new Label(
-                    workspaceValue == null  ? null : WorkspaceID.fromRaw(workspaceValue),
-                    pkgValue == null ? null : PkgID.fromRaw(pkgValue),
-                    targetValue == null ? null : TargetID.fromRaw(hasLocality, targetValue));
-        } else {
+        if (!matcher.find()) {
             throw new LabelSyntaxException("Invalid label syntax.");
         }
 
+        final String workspaceValue = matcher.group(1);
+        final String rootValue = matcher.group(2);
+        final String pkgValue = matcher.group(3);
+        final String localityValue = matcher.group(4);
+        final String targetValue = matcher.group(5);
+
+        final boolean hasWorkspace = workspaceValue != null;
+        final boolean hasRoot = rootValue != null;
+        final boolean hasPkg = pkgValue != null;
+        final boolean hasLocality = localityValue != null;
+        final boolean hasTarget = targetValue != null;
+
         // An empty label is not a label at all.
-        if (!label.hasWorkspace() && !label.hasPkg() && !label.hasTarget()) {
+        if (!hasWorkspace && !hasPkg && !hasTarget) {
             throw new LabelSyntaxException("A label may not be empty.");
         }
 
-        return label;
+        // A local source file label may only reference files or targets in the same directory.
+        if (!hasWorkspace && !hasRoot && !hasPkg && !hasLocality && targetValue.contains("/")) {
+            throw new LabelSyntaxException("A label which references a source file may only " +
+                    "reference a file within the same directory as the package.");
+        }
+
+        // Package paths can be empty.
+        return new Label(
+                hasWorkspace ? WorkspaceID.fromRaw(workspaceValue) : null,
+                hasRoot ? PkgID.fromRaw(Nullability.nullableOr("", () -> pkgValue)) : null,
+                hasTarget ? TargetID.fromRaw(hasLocality, targetValue) : null
+        );
     }
 
     /**
