@@ -1,10 +1,11 @@
 package server.codelens;
 
-import java.util.concurrent.CompletableFuture;
+import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,9 +16,11 @@ import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
+import server.commands.AllCommands;
 import server.utils.DocumentTracker;
 import server.workspace.Workspace;
 import server.bazel.bazelWorkspaceAPI.WorkspaceAPI;
+import server.bazel.bazelWorkspaceAPI.WorkspaceAPIException;
 import server.bazel.tree.BuildTarget;
 import server.bazel.tree.WorkspaceTree;
 
@@ -34,37 +37,41 @@ public class CodeLensProvider {
     public CompletableFuture<List<? extends CodeLens>> getCodeLens(CodeLensParams params) {
         logger.info("CodeLens Provider invoked");
 
-        URI uri = new URI(params.getTextDocument().getUri());
-        List<BuildTarget> targets = findTargets(uri);
+        URI uri = null;
+        try {
+            uri = new URI(params.getTextDocument().getUri());
+        }
+        catch(Exception e) {
+            logger.error("Unable to get URI: " + e);
+        }
+        String path = buildPath(uri);
+        List<BuildTarget> targets = findTargets(path);
         String contents = documentTracker.getContents(uri);
 
         List<CodeLens> results = new ArrayList<>();
 
         for (BuildTarget target : targets) {
-            Codelens result = new CodeLens();
+            CodeLens result = new CodeLens();
             result.setRange(findRangeForTarget(target, contents));
-            result.setCommand(findCommandForTarget(target));
+            result.setCommand(findCommandForTarget(target, path));
             results.add(result);
         }
-
-        // CodeLens dummy = new CodeLens();
-        // Range range = new Range(new Position(4, 0), new Position(4, 13));
-        // Command command = new Command();
-        // command.setTitle("Do Nothing");
-        // command.setCommand(CommandConstants.none);
-        // dummy.setRange(range);
-        // dummy.setCommand(command);
 
         return CompletableFuture.completedFuture(results);
     }
 
-    private List<BuildTarget> findTargets(URI uri) {
+    private List<BuildTarget> findTargets(String path) {
 
         final WorkspaceTree tree = Workspace.getInstance().getWorkspaceTree();
         final WorkspaceAPI api = new WorkspaceAPI(tree);
 
-        Path path = Path.of(uri);
-        List<BuildTarget> targets = api.findPossibleTargetsForPath(path.getParent());
+        List<BuildTarget> targets = null;
+        try {
+            targets = api.findPossibleTargetsForPath(Path.of(path));
+        }
+        catch(WorkspaceAPIException e) {
+            logger.error(e + " in: " + path);
+        }
 
         return targets;
     }
@@ -86,11 +93,32 @@ public class CodeLensProvider {
 
     }
 
-    private Command getCommandForTarget(BuildTarget target) {
+    private Command findCommandForTarget(BuildTarget target, String path) {
         Command command = new Command();
-        command.setTitle("Do Nothing to " + target.getLabel());
-        command.setCommand(CommandConstants.none);
+        command.setTitle("Build " + target.getLabel());
+        command.setCommand(AllCommands.build);
+        List<Object> args = new ArrayList<Object>();
+        logger.info("Setting command " + AllCommands.build + " with path arg of " + path + ":" + target.getLabel());
+        args.add(path + ":" + target.getLabel());
+        command.setArguments(args);
         return command;
     }
 
+    private String buildPath(URI uri) {
+        File file = new File(uri);
+        StringBuilder pathBuilder = new StringBuilder();
+        while(file != null) {
+            if(file.isDirectory()) {
+                if(Arrays.asList(file.list()).contains("WORKSPACE") || Arrays.asList(file.list()).contains("WORKSPACE.bzl")) {
+                    pathBuilder.insert(0, "/");
+                    break;
+                }
+                else {
+                    pathBuilder.insert(0, "/" + file.getName());
+                }
+            }
+            file = new File(file.getParent());
+        }
+        return pathBuilder.toString();
+    }
 }
