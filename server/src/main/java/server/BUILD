@@ -11,6 +11,7 @@ java_library(
     deps = [
         "//server/src/main/java/server/buildifier",
         "//server/src/main/java/server/codelens",
+        "//server/src/main/java/server/commands",
         "//server/src/main/java/server/completion",
         "//server/src/main/java/server/diagnostics",
         "//server/src/main/java/server/formatting",

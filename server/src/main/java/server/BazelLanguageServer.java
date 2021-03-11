@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.services.*;
+import server.commands.AllCommands;
 import server.workspace.ProjectFolder;
 import server.workspace.Workspace;
 
@@ -48,13 +49,13 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
         serverCapabilities.setCompletionProvider(new CompletionOptions(true, Arrays.asList(":", "/")));
         serverCapabilities.setDocumentFormattingProvider(true);
         serverCapabilities.setCodeLensProvider(new CodeLensOptions(true));
+        serverCapabilities.setExecuteCommandProvider(new ExecuteCommandOptions(AllCommands.allCommands()));
 
         logger.info(String.format("Declared server capabilities: \"%s\"", serverCapabilities));
       
         return new InitializeResult(serverCapabilities);
     }
 
-            
     private void initializeWorkspaceRoot(InitializeParams params) {
         final ProjectFolder folder = ProjectFolder.fromURI(params.getRootUri());
         Workspace.getInstance().setRootFolder(folder);

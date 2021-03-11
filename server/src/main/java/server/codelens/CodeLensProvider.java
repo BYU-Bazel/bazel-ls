@@ -22,11 +22,11 @@ import server.bazel.tree.BuildTarget;
 import server.bazel.tree.WorkspaceTree;
 
 public class CodeLensProvider {
-    
+
     private static final Logger logger = LogManager.getLogger(CodeLensProvider.class);
 
     private DocumentTracker documentTracker;
-    
+
     public CodeLensProvider(DocumentTracker documentTracker) {
         this.documentTracker = documentTracker;
     }
@@ -34,9 +34,18 @@ public class CodeLensProvider {
     public CompletableFuture<List<? extends CodeLens>> getCodeLens(CodeLensParams params) {
         logger.info("CodeLens Provider invoked");
 
+<<<<<<< HEAD
         URI uri = new URI(params.getTextDocument().getUri());
         List<BuildTarget> targets = findTargets(uri);
         String contents = documentTracker.getContents(uri);
+=======
+        String contents = "";
+        try {
+            contents = documentTracker.getContents(new URI(params.getTextDocument().getUri()));
+        } catch (Exception e) {
+            logger.error(e);
+        }
+>>>>>>> 0c036fd32503ad72bea5e3b73cad1693630f0354
 
         List<CodeLens> results = new ArrayList<>();
 
@@ -47,6 +56,7 @@ public class CodeLensProvider {
             results.add(result);
         }
 
+<<<<<<< HEAD
         // CodeLens dummy = new CodeLens();
         // Range range = new Range(new Position(4, 0), new Position(4, 13));
         // Command command = new Command();
@@ -57,6 +67,8 @@ public class CodeLensProvider {
 
         return CompletableFuture.completedFuture(results);
     }
+=======
+>>>>>>> 0c036fd32503ad72bea5e3b73cad1693630f0354
 
     private List<BuildTarget> findTargets(URI uri) {
 
