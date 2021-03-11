@@ -9,7 +9,10 @@ java_library(
         "CodeLensResolver.java",
     ],
     deps = [
+        "//server/src/main/java/server/bazel/bazelWorkspaceAPI",
+        "//server/src/main/java/server/bazel/tree",
         "//server/src/main/java/server/utils",
+        "//server/src/main/java/server/workspace",
         "//third_party/java:guava",
         "//third_party/java:log4j",
         "//third_party/java:lsp4j",
