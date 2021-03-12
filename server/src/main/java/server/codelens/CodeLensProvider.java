@@ -51,10 +51,12 @@ public class CodeLensProvider {
         List<CodeLens> results = new ArrayList<>();
 
         for (BuildTarget target : targets) {
-            CodeLens result = new CodeLens();
-            result.setRange(findRangeForTarget(target, contents));
-            result.setCommand(findCommandForTarget(target, path));
-            results.add(result);
+            if(target.getKind().contains("_binary") || target.getKind().contains("_test")) {
+                CodeLens result = new CodeLens();
+                result.setRange(findRangeForTarget(target, contents));
+                result.setCommand(findCommandForTarget(target, path));
+                results.add(result);
+            }
         }
 
         return CompletableFuture.completedFuture(results);
@@ -95,12 +97,19 @@ public class CodeLensProvider {
 
     private Command findCommandForTarget(BuildTarget target, String path) {
         Command command = new Command();
-        command.setTitle("Build " + target.getLabel());
-        command.setCommand(AllCommands.build);
         List<Object> args = new ArrayList<Object>();
-        logger.info("Setting command " + AllCommands.build + " with path arg of " + path + ":" + target.getLabel());
+        if(target.getKind().contains("_binary")) {
+            command.setTitle("Build " + target.getLabel());
+            command.setCommand(AllCommands.build);
+            logger.info("Setting command " + AllCommands.build + " with path arg of " + path + ":" + target.getLabel());
+        } else if (target.getKind().contains("_test")) {
+            command.setTitle("Test " + target.getLabel());
+            command.setCommand(AllCommands.test);
+            logger.info("Setting command " + AllCommands.test + " with a path arg of " + path + ":" + target.getLabel());
+        }
         args.add(path + ":" + target.getLabel());
         command.setArguments(args);
+        
         return command;
     }
 

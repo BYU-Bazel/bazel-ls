@@ -3,6 +3,9 @@ package server.commands;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.ExecuteCommandParams;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.services.LanguageClient;
 
 import server.bazel.cli.AbstractBazelCommand;
 import server.dispatcher.CommandDispatcher;
@@ -23,15 +26,14 @@ public class CommandProvider {
         dispatcher = null;
     }
 
-    public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
+    public CompletableFuture<Object> executeCommand(ExecuteCommandParams params, LanguageClient languageClient) {
         logger.info("Executing command " + params.getCommand() + " with args " + params.getArguments());
-        String output = "";
         switch(params.getCommand()) {
             case AllCommands.build:
-                output = executeBuildCommand(params.getArguments());
+                executeBuildCommand(params.getArguments(), languageClient);
                 break;
             case AllCommands.test:
-                output = executeTestCommand(params.getArguments());
+                executeTestCommand(params.getArguments(), languageClient);
                 break;
             case AllCommands.none:
                 logger.info(params.getCommand() + " was invoked, nothing should happen");
@@ -39,49 +41,45 @@ public class CommandProvider {
             default:
                 logger.error("Unsupported command: " + params.getCommand());
         }
-        return CompletableFuture.completedFuture(output);
+        return CompletableFuture.completedFuture(new Object());
     }
 
-    private String executeBuildCommand(List<Object> args) {
+    private void executeBuildCommand(List<Object> args, LanguageClient languageClient) {
         String pathString = args.get(0).toString();
         logger.info("path to be built: " + pathString);
-        String returnOutput = "";
         CommandToRun command = new CommandToRun("build", pathString);
         try {
             logger.info("Executing command...");
             final CommandOutput output = runCommand(command);
             if (output.didSucceed()) {
-                logger.info(String.format("Successfully ran command, output returned: %s", output.getRawStandardOutput()));
-                returnOutput = output.getRawStandardOutput();
+                logger.info("Successfully ran command, with output: " + output.getRawStandardOutput());
+                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawStandardOutput()));
             } else {
-                logger.info(String.format("Command failed, output returned: %s", output.getRawErrorOutput()));
-                returnOutput = output.getRawErrorOutput();
+                logger.info("Command failed, with output: " + output.getRawErrorOutput());
+                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
             }
         } catch(CommandsException e) {
             logger.error("An error occured while trying to execute the command: bazel build " + pathString);
         }
-        return returnOutput;
     }
 
-    private String executeTestCommand(List<Object> args) {
+    private void executeTestCommand(List<Object> args, LanguageClient languageClient) {
         String pathString = args.get(0).toString();
         logger.info("path to be built: " + pathString);
-        String returnOutput = "";
-        CommandToRun command - new CommandToRun("test", pathString);
+        CommandToRun command = new CommandToRun("test", pathString);
         try {
             logger.info("Executing command...");
             final CommandOutput output = runCommand(command);
             if (output.didSucceed()) {
-                logger.info(String.format("Successfully ran test, output returned: %s", output.getRawStandardOutput()));
-                returnOutput = output.getRawStandardOutput();
+                logger.info("Successfully ran test");
+                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawStandardOutput()));
             } else {
-                logger.info(String.format("Test failed, output returned: %s", output.getRawErrorOutput()));
-                returnOutput = output.getRawErrorOutput();
+                logger.info("Test failed");
+                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
             }
         } catch(CommandsException e) {
             logger.error("An error occured while trying to execute the command: bazel test " + pathString);
         }
-        return returnOutput;
     }
 
     private CommandOutput runCommand(AbstractBazelCommand command) throws CommandsException {
