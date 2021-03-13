@@ -51,15 +51,12 @@ public class CommandProvider {
         try {
             logger.info("Executing command...");
             final CommandOutput output = runCommand(command);
-            if (output.didSucceed()) {
-                logger.info("Successfully ran command, with output: " + output.getRawStandardOutput());
-                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawStandardOutput()));
-            } else {
-                logger.info("Command failed, with output: " + output.getRawErrorOutput());
-                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
-            }
+            languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
+            languageClient.showMessage(new MessageParams(MessageType.Info, "Executed target. See language server output console for more detail."));
+            logger.info("Command successfully executed");
         } catch(CommandsException e) {
             logger.error("An error occured while trying to execute the command: bazel build " + pathString);
+            languageClient.showMessage(new MessageParams(MessageType.Error, "An unexpected error occured."));
         }
     }
 
@@ -70,15 +67,12 @@ public class CommandProvider {
         try {
             logger.info("Executing command...");
             final CommandOutput output = runCommand(command);
-            if (output.didSucceed()) {
-                logger.info("Successfully ran test");
-                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawStandardOutput()));
-            } else {
-                logger.info("Test failed");
-                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
-            }
+            languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
+            languageClient.showMessage(new MessageParams(MessageType.Info, "Executed target. See language server output console for more detail."));
+            logger.info("Command successfully executed");
         } catch(CommandsException e) {
             logger.error("An error occured while trying to execute the command: bazel test " + pathString);
+            languageClient.showMessage(new MessageParams(MessageType.Error, "An unexpected error occured."));
         }
     }
 
