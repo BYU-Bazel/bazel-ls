@@ -67,7 +67,7 @@ public class Workspace {
         workspaceFolders.removeAll(folders);
     }
 
-    public void initializeWorkspace() {
+    public void initializeWorkspace() throws BazelServerException {
         List<BuildTarget> buildTargets;
         List<SourceFile> sourceFiles;
         try {
@@ -77,6 +77,7 @@ public class Workspace {
             sourceFiles.forEach(this::addSourceToTree);
         } catch (BazelServerException e) {
             logger.info(e.getMessage());
+            throw e;
         }
     }
 

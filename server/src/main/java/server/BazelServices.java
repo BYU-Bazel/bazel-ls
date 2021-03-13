@@ -205,4 +205,8 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
             return CompletableFuture.completedFuture(new ArrayList<TextEdit>());
         }
     }
+
+    public void sendMessageToClient(MessageType type,String message){
+        languageClient.showMessage(new MessageParams(type, message));
+    }
 }

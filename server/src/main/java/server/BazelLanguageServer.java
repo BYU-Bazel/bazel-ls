@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.services.*;
 import server.workspace.ProjectFolder;
 import server.workspace.Workspace;
+import server.bazel.cli.BazelServerException;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -36,7 +37,18 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
     logger.info(String.format("Starting up bazel language server with params:\n\"%s\"", params));
 
         initializeWorkspaceRoot(params);
-        Workspace.getInstance().initializeWorkspace();
+        try{
+            Workspace.getInstance().initializeWorkspace();
+            logger.info("workspace initialized");
+
+        } catch( BazelServerException e){
+            logger.info("workspace error");
+            String message = "Bazel Extension Failed to parse due to BUILD Parsing errors:\n";
+            String fix = "Please fix the Bazel Syntax error then restart the Extension\n";
+            bazelServices.sendMessageToClient(MessageType.Error, message + fix + e.getMessage());
+            
+        }
+        
 
         return CompletableFuture.completedFuture(specifyServerCapabilities());
     }
