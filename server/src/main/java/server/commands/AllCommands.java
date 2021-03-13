@@ -3,6 +3,9 @@ package server.commands;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Manages a list of all command that the server can interpret and execute
+ */
 public class AllCommands {
     private AllCommands() {
         super();

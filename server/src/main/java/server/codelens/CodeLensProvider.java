@@ -24,16 +24,30 @@ import server.bazel.bazelWorkspaceAPI.WorkspaceAPIException;
 import server.bazel.tree.BuildTarget;
 import server.bazel.tree.WorkspaceTree;
 
+/**
+ * This class is delegated the CodeLens functionality of the BazelServices class
+ */
 public class CodeLensProvider {
 
     private static final Logger logger = LogManager.getLogger(CodeLensProvider.class);
 
     private DocumentTracker documentTracker;
 
+    /**
+     * Public constructor for CodeLensProvider
+     * 
+     * @param documentTracker DocumentTracker used to extract the contents of a text document
+     */
     public CodeLensProvider(DocumentTracker documentTracker) {
         this.documentTracker = documentTracker;
     }
 
+    /**
+     * Parses a document for actionable BUILD targets and creates codelens objects corresponding to them
+     * 
+     * @param params the information passed to the server from the client containing the document to retrieve codelens for
+     * @return a list of CodeLens objects representing the CodeLens options to be displayed to the user
+     */
     public CompletableFuture<List<? extends CodeLens>> getCodeLens(CodeLensParams params) {
         logger.info("CodeLens Provider invoked");
 
@@ -62,6 +76,12 @@ public class CodeLensProvider {
         return CompletableFuture.completedFuture(results);
     }
 
+    /**
+     * Uses the workspace tree to parse the document for BUILD targets
+     * 
+     * @param path the path to the directory of the BUILD file
+     * @return a list of BUILD targets
+     */
     private List<BuildTarget> findTargets(String path) {
 
         final WorkspaceTree tree = Workspace.getInstance().getWorkspaceTree();
@@ -78,6 +98,13 @@ public class CodeLensProvider {
         return targets;
     }
 
+    /**
+     * Locates the declaration of a BUILD target within a BUILD file
+     * 
+     * @param target the BUILD target to find
+     * @param contents a String of the document's contents
+     * @return a Range spanning the declaration of the BUILD target
+     */
     private Range findRangeForTarget(BuildTarget target, String contents) {
 
         String nameDeclaration = "name = \"" + target.getLabel() + "\"";
@@ -95,6 +122,13 @@ public class CodeLensProvider {
 
     }
 
+    /**
+     * Generates command parameters that the client can return to the server if the user selects the relevant codelens
+     * 
+     * @param target the BUILD target that the command should act on
+     * @param path the path to the directory containing the BUILD file
+     * @return a Command that the server can interpret to act on an actionable BUILD target
+     */
     private Command findCommandForTarget(BuildTarget target, String path) {
         Command command = new Command();
         List<Object> args = new ArrayList<Object>();
@@ -113,6 +147,11 @@ public class CodeLensProvider {
         return command;
     }
 
+    /**
+     * Generates the path from the WORKSPACE root to the directory containing the BUILD file
+     * @param uri the URI of the BUILD file
+     * @return the path from the WORKSPACE root to the directory containing the BUILD file
+     */
     private String buildPath(URI uri) {
         File file = new File(uri);
         StringBuilder pathBuilder = new StringBuilder();

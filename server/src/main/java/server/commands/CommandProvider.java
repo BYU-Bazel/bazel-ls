@@ -15,6 +15,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * This class is delegated the task of handling Commands sent by the client
+ */
 public class CommandProvider {
     private static final Logger logger = LogManager.getLogger(CommandProvider.class);
     private static final CommandDispatcher fallbackDispatcher = CommandDispatcher.create("commandprovider");
@@ -26,6 +29,13 @@ public class CommandProvider {
         dispatcher = null;
     }
 
+    /**
+     * Executes a command sent by the client
+     * 
+     * @param params information about the command sent by the client
+     * @param languageClient interface for returning command output and feedback to the client
+     * @return an empty object
+     */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params, LanguageClient languageClient) {
         logger.info("Executing command " + params.getCommand() + " with args " + params.getArguments());
         switch(params.getCommand()) {
@@ -44,6 +54,11 @@ public class CommandProvider {
         return CompletableFuture.completedFuture(new Object());
     }
 
+    /**
+     * Executes a command to build a _binary BUILD target
+     * @param args contains a String of the path to the BUILD target
+     * @param languageClient an interface with which to return output and feedback to the client
+     */
     private void executeBuildCommand(List<Object> args, LanguageClient languageClient) {
         String pathString = args.get(0).toString();
         logger.info("path to be built: " + pathString);
@@ -60,6 +75,12 @@ public class CommandProvider {
         }
     }
 
+    /**
+     * Executes a command to run tests in a _test BUILD target
+     * 
+     * @param args contains a String of the path to the BUILD target
+     * @param languageClient an interface with which to return output and feedback to the client
+     */
     private void executeTestCommand(List<Object> args, LanguageClient languageClient) {
         String pathString = args.get(0).toString();
         logger.info("path to be built: " + pathString);
@@ -76,6 +97,13 @@ public class CommandProvider {
         }
     }
 
+    /**
+     * Uses the Dispatcher to run a command in the terminal
+     * 
+     * @param command the command to run in the terminal
+     * @return the ouput of the command
+     * @throws CommandsException if something goes wrong
+     */
     private CommandOutput runCommand(AbstractBazelCommand command) throws CommandsException {
         try {
             Optional<CommandOutput> output = getEffectiveDispatcher().dispatch(command);
