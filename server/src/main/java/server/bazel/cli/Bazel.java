@@ -1,5 +1,6 @@
 package server.bazel.cli;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;

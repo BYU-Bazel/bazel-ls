@@ -58,7 +58,7 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
         ServerCapabilities serverCapabilities = new ServerCapabilities();
 
         serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
-        serverCapabilities.setCompletionProvider(new CompletionOptions(true, Arrays.asList(":", "/")));
+        serverCapabilities.setCompletionProvider(new CompletionOptions(true, Arrays.asList(":", "/", "\"")));
         serverCapabilities.setDocumentFormattingProvider(true);
         serverCapabilities.setCodeLensProvider(new CodeLensOptions(true));
         serverCapabilities.setExecuteCommandProvider(new ExecuteCommandOptions(AllCommands.allCommands()));
