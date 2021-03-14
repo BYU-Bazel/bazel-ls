@@ -2,7 +2,7 @@ package server.codelens;
 
 import java.io.File;
 import java.net.URI;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -89,7 +89,7 @@ public class CodeLensProvider {
 
         List<BuildTarget> targets = null;
         try {
-            targets = api.findPossibleTargetsForPath(Path.of(path));
+            targets = api.findPossibleTargetsForPath(Paths.get(path));
         }
         catch(WorkspaceAPIException e) {
             logger.error(e + " in: " + path);
