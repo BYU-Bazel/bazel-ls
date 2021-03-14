@@ -17,6 +17,7 @@ java_library(
         "//server/src/main/java/server/formatting",
         "//server/src/main/java/server/utils",
         "//server/src/main/java/server/workspace",
+        "//server/src/main/java/server/bazel/cli",
         "//third_party/java:gson",
         "//third_party/java:guava",
         "//third_party/java:log4j",

@@ -229,4 +229,8 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
         return commandProvider.executeCommand(params, languageClient);
     }
+    
+    public void sendMessageToClient(MessageType type,String message){
+        languageClient.showMessage(new MessageParams(type, message));
+    }
 }

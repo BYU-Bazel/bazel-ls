@@ -11,6 +11,7 @@ import server.bazel.tree.SourceFile;
 import server.bazel.tree.WorkspaceTree;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,15 +40,20 @@ public class WorkspaceTest {
 
     @Test
     public void testTreeWithSingleChildren() {
-        mockSourceFileList.add(new SourceFile("TestFile1.java", Path.of("main")));
-        mockSourceFileList.add(new SourceFile("TestFile2.java", Path.of("main/java")));
-        mockSourceFileList.add(new SourceFile("TestFile3.java", Path.of("main/java/test")));
+        mockSourceFileList.add(new SourceFile("TestFile1.java", Paths.get("main")));
+        mockSourceFileList.add(new SourceFile("TestFile2.java", Paths.get("main/java")));
+        mockSourceFileList.add(new SourceFile("TestFile3.java", Paths.get("main/java/test")));
 
-        mockBuildTargetList.add(new BuildTarget(Path.of("main"), "test_1", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main/java"), "test_2", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main/java/test"), "test_3", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_1", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main/java"), "test_2", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main/java/test"), "test_3", "test"));
 
-        classUnderTest.initializeWorkspace();
+        try{
+            classUnderTest.initializeWorkspace();
+        } catch( BazelServerException e){
+            System.out.println(e.getMessage());
+        }
+        
         WorkspaceTree tree = classUnderTest.getWorkspaceTree();
         WorkspaceTree.Node node = tree.getRoot();
         checkChildrenCount(node, 1);
@@ -55,19 +61,19 @@ public class WorkspaceTest {
 
     @Test
     public void testTreeWithSeveralChildren() throws BazelServerException {
-        mockSourceFileList.add(new SourceFile("TestFile1.java", Path.of("main")));
-        mockSourceFileList.add(new SourceFile("TestFile4.java", Path.of("test")));
-        mockSourceFileList.add(new SourceFile("TestFile2.java", Path.of("main/java")));
-        mockSourceFileList.add(new SourceFile("TestFile5.java", Path.of("main/java1")));
-        mockSourceFileList.add(new SourceFile("TestFile3.java", Path.of("main/java/test")));
-        mockSourceFileList.add(new SourceFile("TestFile6.java", Path.of("main/java/test1")));
+        mockSourceFileList.add(new SourceFile("TestFile1.java", Paths.get("main")));
+        mockSourceFileList.add(new SourceFile("TestFile4.java", Paths.get("test")));
+        mockSourceFileList.add(new SourceFile("TestFile2.java", Paths.get("main/java")));
+        mockSourceFileList.add(new SourceFile("TestFile5.java", Paths.get("main/java1")));
+        mockSourceFileList.add(new SourceFile("TestFile3.java", Paths.get("main/java/test")));
+        mockSourceFileList.add(new SourceFile("TestFile6.java", Paths.get("main/java/test1")));
 
-        mockBuildTargetList.add(new BuildTarget(Path.of("main"), "test_1", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("test"), "test_4", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main/java"), "test_2", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main/java1"), "test_5", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main/java/test"), "test_3", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main/java/test1"), "test_6", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_1", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("test"), "test_4", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main/java"), "test_2", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main/java1"), "test_5", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main/java/test"), "test_3", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main/java/test1"), "test_6", "test"));
 
         classUnderTest.initializeWorkspace();
         WorkspaceTree tree = classUnderTest.getWorkspaceTree();
@@ -77,11 +83,14 @@ public class WorkspaceTest {
 
     @Test
     public void testTreeWithSeveralBuildTargets() {
-        mockBuildTargetList.add(new BuildTarget(Path.of("main"), "test_1", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main"), "test_2", "test"));
-        mockBuildTargetList.add(new BuildTarget(Path.of("main"), "test_3", "test"));
-
-        classUnderTest.initializeWorkspace();
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_1", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_2", "test"));
+        mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_3", "test"));
+        try{
+            classUnderTest.initializeWorkspace();
+        } catch( BazelServerException e){
+            System.out.println(e.getMessage());
+        }
         WorkspaceTree tree = classUnderTest.getWorkspaceTree();
         Optional<WorkspaceTree.Node> node = tree.getRoot().getChild("main");
         Assert.assertTrue(node.isPresent());
