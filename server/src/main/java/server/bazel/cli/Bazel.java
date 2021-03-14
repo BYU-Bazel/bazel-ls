@@ -61,7 +61,6 @@ public final class Bazel {
             logger.info(line);
             List<String> parts = Arrays.asList(line.split("\\s+"));
             List<String> ruleSplit = parsePath(parts.get(2));
-
             buildTargets.add(new BuildTarget(Paths.get(ruleSplit.get(0).substring(1)), ruleSplit.get(1), parts.get(0)));
         });
         return buildTargets;

@@ -13,6 +13,7 @@ import server.bazel.tree.Package;
 import server.bazel.tree.WorkspaceTree;
 import server.utils.DocumentTracker;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

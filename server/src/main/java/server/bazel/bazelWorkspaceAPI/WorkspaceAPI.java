@@ -56,10 +56,10 @@ public class WorkspaceAPI {
     /**
      *
      * @param pathToPackage The path represented as a string to the package that contains possible Build Targets
-     *          expected format: BuildTarget Object where path is "Path.of(//path/to)" and label is null
+     *          expected format: BuildTarget Object where path is "Paths.get(//path/to)" and label is null
      *
      * @return A List of Paths, represented by a string, of each possible build target
-     *          expected output: list = {BuildTarget(Path.of(//path/to), "targetName", "kindValue)}
+     *          expected output: list = {BuildTarget(Paths.get(//path/to), "targetName", "kindValue)}
      * @throws WorkspaceAPIException if the pathToPackage is an invalid path within the given Workspace
      */
     public List<BuildTarget> findPossibleTargetsForPath(Path pathToPackage) throws WorkspaceAPIException {
@@ -75,7 +75,7 @@ public class WorkspaceAPI {
     /**
      *
      * @param targetToCheck The path, represented by a String, to the given build target
-     *          expected format: BuildTarget(Path.of(//path/to), "targetA", "kindValue")
+     *          expected format: BuildTarget(Paths.get(//path/to), "targetA", "kindValue")
      * @return true if the build target is stored in the workspace tree
      */
     public boolean isValidTarget(BuildTarget targetToCheck){
@@ -103,7 +103,7 @@ public class WorkspaceAPI {
     /**
      *
      * @param sourceFile The path, represented by a String, to the given build target
-     *          expected format: SourceFile object SourceFile("file.java", Path.of(//path/to/file.java))
+     *          expected format: SourceFile object SourceFile("file.java", Paths.get(//path/to/file.java))
      * @return true if the sourcefile is stored in the workspace tree at targetPath location
      */
     public boolean isSourceFileInPackage(SourceFile sourceFile){
@@ -126,7 +126,7 @@ public class WorkspaceAPI {
     /**
      *
      * @param file represents the file that is being searched for
-     * @return a Path object that represents Path.of(//path/to/BUILD)
+     * @return a Path object that represents Paths.get(//path/to/BUILD)
      * @throws WorkspaceAPIException If the source file does not exist on the worktree, this exception is thrown
      */
     public Path findPathToBUILDFromSourceFile(SourceFile file) throws WorkspaceAPIException {
@@ -147,7 +147,7 @@ public class WorkspaceAPI {
 
     /**
      *
-     * @param path Accepts a path in the given format Path.of("//path/to/package")
+     * @param path Accepts a path in the given format Paths.get("//path/to/package")
      * @return the WorkspaceTree node that represents the given package
      * @throws WorkspaceAPIException if path is not in given workspace tree
      */

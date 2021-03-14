@@ -29,24 +29,24 @@ public class CompatabilityUtility {
         // Handle local imports differently because the bazel our CLI doesn't support querying for local rules.
         if (label.isLocal()) {
             Preconditions.checkNotNull(path);
-            Preconditions.checkArgument(label.hasName());
+            Preconditions.checkArgument(label.hasTarget());
             path = toWorkspaceLocal(path);
-            return new BuildTarget(Paths.get("//" + path), label.name(), null);
+            return new BuildTarget(Paths.get("//" + path), label.target().value(), null);
         }
 
-        if (label.hasPkg() && label.hasName()) {
-            return new BuildTarget(Paths.get("//" + label.pkg()), label.name(), null);
+        if (label.hasPkg() && label.hasTarget()) {
+            return new BuildTarget(Paths.get("//" + label.pkg().value()), label.target().value(), null);
         }
 
-        if (!label.hasName()) {
+        if (!label.hasTarget()) {
             // Handle implied packages.
-            final String[] parts = label.pkg().split("/");
+            final String[] parts = label.pkg().value().split("/");
             final String lastPackageName = parts[parts.length - 1];
             return new BuildTarget(Paths.get("//" + label.pkg()), lastPackageName, null);
         }
 
         // It only has the name.
-        return new BuildTarget(Paths.get("//"), label.name(), null);
+        return new BuildTarget(Paths.get("//"), label.target().value(), null);
     }
 
     // TODO(josiahsrc): This behavior should be implied by interp.
