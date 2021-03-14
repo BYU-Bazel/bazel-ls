@@ -48,7 +48,12 @@ public class WorkspaceTest {
         mockBuildTargetList.add(new BuildTarget(Paths.get("main/java"), "test_2", "test"));
         mockBuildTargetList.add(new BuildTarget(Paths.get("main/java/test"), "test_3", "test"));
 
-        classUnderTest.initializeWorkspace();
+        try{
+            classUnderTest.initializeWorkspace();
+        } catch( BazelServerException e){
+            System.out.println(e.getMessage());
+        }
+        
         WorkspaceTree tree = classUnderTest.getWorkspaceTree();
         WorkspaceTree.Node node = tree.getRoot();
         checkChildrenCount(node, 1);
@@ -81,8 +86,11 @@ public class WorkspaceTest {
         mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_1", "test"));
         mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_2", "test"));
         mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_3", "test"));
-
-        classUnderTest.initializeWorkspace();
+        try{
+            classUnderTest.initializeWorkspace();
+        } catch( BazelServerException e){
+            System.out.println(e.getMessage());
+        }
         WorkspaceTree tree = classUnderTest.getWorkspaceTree();
         Optional<WorkspaceTree.Node> node = tree.getRoot().getChild("main");
         Assert.assertTrue(node.isPresent());
