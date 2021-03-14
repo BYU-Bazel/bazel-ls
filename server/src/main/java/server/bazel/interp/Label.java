@@ -10,11 +10,11 @@ import java.util.regex.Pattern;
  * Represents a Bazel target label. E.g. `@maven//some/other:package_name`.
  */
 public class Label {
-    private final WorkspaceID workspace;
-    private final PkgID pkg;
-    private final TargetID target;
+    private final String workspace;
+    private final String pkg;
+    private final String target;
 
-    private Label(WorkspaceID workspace, PkgID pkg, TargetID target) {
+    private Label(String workspace, String pkg, String target) {
         this.workspace = workspace;
         this.pkg = pkg;
         this.target = target;
@@ -39,18 +39,16 @@ public class Label {
         final String workspaceRegex = "(?:@([a-zA-Z0-9._-]+))";
         final String rootRegex = "(//)";
         final String pkgRegex = "([a-zA-Z0-9._-]*(?:/[a-zA-Z0-9._-]+)*)";
-        final String localityRegex = "(:)";
         final String targetRegex = "([a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*)";
-        final String fullRegex = String.format("^%s?(?:%s%s)?(?:%s?%s)?$", workspaceRegex, rootRegex,
-                pkgRegex, localityRegex, targetRegex);
+        final String fullRegex = String.format("^%s?(?:%s%s)?(?::?%s)?$", workspaceRegex, rootRegex,
+                pkgRegex, targetRegex);
 
         // Capturing Groups:
         // 0: Entire label string value.
         // 1: Workspace name (can be empty).
         // 2: Root indicator, e.g. "//" (can be empty).
         // 3: Package path (can be empty).
-        // 4: Locality indicator, e.g. ":" (can be empty).
-        // 5: Target name of rule (can be empty).
+        // 4: Target name of rule (can be empty).
         final Pattern pattern = Pattern.compile(fullRegex);
         final Matcher matcher = pattern.matcher(value);
 
@@ -62,55 +60,35 @@ public class Label {
         final String workspaceValue = matcher.group(1);
         final String rootValue = matcher.group(2);
         final String pkgValue = matcher.group(3);
-        final String localityValue = matcher.group(4);
-        final String targetValue = matcher.group(5);
+        final String targetValue = matcher.group(4);
 
         final boolean hasWorkspace = workspaceValue != null;
         final boolean hasRoot = rootValue != null;
         final boolean hasPkg = pkgValue != null;
-        final boolean hasLocality = localityValue != null;
         final boolean hasTarget = targetValue != null;
 
-        // An empty label is not a label at all.
+        // An empty label is not a label at all. E.g. //: is not valid
         if (!hasWorkspace && !hasPkg && !hasTarget) {
             throw new LabelSyntaxException("A label may not be empty.");
         }
 
-        // A local source file label may only reference files or targets in the same directory.
-        if (!hasWorkspace && !hasRoot && !hasPkg && !hasLocality && targetValue.contains("/")) {
-            throw new LabelSyntaxException("A label which references a source file may only " +
-                    "reference a file within the same directory as the package.");
-        }
-
-        // Package paths can be empty.
         return new Label(
-                hasWorkspace ? WorkspaceID.fromRaw(workspaceValue) : null,
-                hasRoot ? PkgID.fromRaw(Nullability.nullableOr("", () -> pkgValue)) : null,
-                hasTarget ? TargetID.fromRaw(hasLocality, targetValue) : null
+                hasWorkspace ? workspaceValue : null,
+                hasRoot ? Nullability.nullableOr("", () -> pkgValue) : null,
+                hasTarget ? targetValue : null
         );
     }
 
     /**
      * If a label is local, it means that it is referencing something within the same
-     * BUILD file. E.g. if a label is `:target_name`, and resides in a BUILD file at
+     * package. E.g. if a label is `:target_name`, and resides in a BUILD file at
      * `/some/package/BUILD`, then that label would be referencing a label at the Bazel
      * location `//some/package:target_name`.
      *
      * @return Whether this label is a local reference.
      */
     public boolean isLocal() {
-        return !hasWorkspace() && !hasPkg() && hasTarget() && target().isLocal();
-    }
-
-    /**
-     * Returns whether or not this is a source file reference. A label may only be a
-     * source file if it does not have a root, a workspace, or a path. The source file
-     * value will effectively be the of the package value (pkg).
-     *
-     * @return Whether this label represents a source file.
-     */
-    public boolean isSourceFile() {
-        return !hasWorkspace() && !hasPkg() && hasTarget() && target().isSourceFile();
+        return !hasWorkspace() && !hasPkg() && hasTarget();
     }
 
     /**
@@ -129,7 +107,7 @@ public class Label {
      *
      * @return The workspace.
      */
-    public WorkspaceID workspace() {
+    public String workspace() {
         return workspace;
     }
 
@@ -148,7 +126,7 @@ public class Label {
      *
      * @return The package.
      */
-    public PkgID pkg() {
+    public String pkg() {
         return pkg;
     }
 
@@ -167,7 +145,7 @@ public class Label {
      *
      * @return The target.
      */
-    public TargetID target() {
+    public String target() {
         return target;
     }
 
@@ -183,26 +161,24 @@ public class Label {
 
         // Append the "@workspace" if specified.
         if (hasWorkspace()) {
-            builder.append(workspace().toString());
+            builder.append("@");
+            builder.append(workspace());
         }
 
         // Append the "//path/to/package" if specified.
         if (hasPkg()) {
-            builder.append(pkg().toString());
+            builder.append("//");
+            builder.append(pkg());
         }
 
         // Append the ":name_of_package" if specified.
         if (hasTarget()) {
-            builder.append(target().toString());
+            builder.append(":");
+            builder.append(target());
         }
 
         return builder.toString();
     }
-
-    // TODO(josiah): Create a way to map from any label to a label's full path.
-    // public String absolute(RepositoryMapping mapping) {
-    //    given :something, return @full//path/to:something
-    // }
 
     @Override
     public String toString() {

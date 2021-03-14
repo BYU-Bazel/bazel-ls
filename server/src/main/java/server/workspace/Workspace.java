@@ -89,6 +89,7 @@ public class Workspace {
     }
 
     private void addTargetToTree(BuildTarget target) {
+        logger.info("Adding target: " + target.toString());
         String[] pathParts = target.getPath().toString().split("/");
         WorkspaceTree.Node node = workspaceTree.getRoot();
         for (String part : pathParts) {
@@ -103,9 +104,11 @@ public class Workspace {
             }
         }
         node.getValue().addBuildTarget(target);
+        logger.info("Post add target: " + node.getValue().getBuildTargets());
     }
 
     private void addSourceToTree(SourceFile source) {
+        logger.info("Adding source file: " + source.toString());
         String[] pathParts = source.getPath().toString().split("/");
         WorkspaceTree.Node node = workspaceTree.getRoot();
         for (String part : pathParts) {
@@ -120,5 +123,6 @@ public class Workspace {
             }
         }
         node.getValue().addSourceFile(source);
+        logger.info("Post add source file: " + node.getValue().getSourceFiles());
     }
 }
