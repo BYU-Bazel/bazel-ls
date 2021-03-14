@@ -61,6 +61,8 @@ public class CompletionProvider {
                 }
             } else if (triggerCharacter.equals(":")) {
                 getBuildTargets(line, completionParams, completionItems);
+            } else if (triggerCharacter.equals("\"")) {
+                getSourceFiles(getRelativePath(completionParams), completionItems, completionParams);
             }
 
         } catch (Exception e) {
@@ -125,19 +127,30 @@ public class CompletionProvider {
         List<File> fileList = new ArrayList<>();
         File directory = new File(path.toUri());
         if(directory.isDirectory()) {
-            for(File file : directory.listFiles()) {
-                if(!file.isDirectory()) {
-                    fileList.add(file);
+            fileList.addAll(Arrays.asList(directory.listFiles()));
+        }
+        fileList.forEach(item -> {
+            if(!checkForExisting(item, completionItems)) {
+                CompletionItem completionItem = new CompletionItem(item.getName());
+                if (item.isDirectory()) {
+                    completionItem.setKind(CompletionItemKind.Folder);
+                } else {
+                    completionItem.setKind(CompletionItemKind.File);
                 }
+                completionItem.setInsertText(item.getName());
+                completionItem.setTextEdit(new TextEdit(new Range(completionParams.getPosition(), new Position(completionParams.getPosition().getLine(), completionParams.getPosition().getCharacter())), item.getName()));
+                completionItems.add(completionItem);
+            }
+        });
+    }
+
+    private boolean checkForExisting(File file, List<CompletionItem> completionItems) {
+        for(CompletionItem item : completionItems) {
+            if(item.getLabel().equals(file.getName())) {
+                return true;
             }
         }
-        fileList.parallelStream().forEach(item -> {
-            CompletionItem completionItem = new CompletionItem(item.getName());
-            completionItem.setKind(CompletionItemKind.File);
-            completionItem.setInsertText(item.getName());
-            completionItem.setTextEdit(new TextEdit(new Range(completionParams.getPosition(), new Position(completionParams.getPosition().getLine(), completionParams.getPosition().getCharacter())), item.getName()));
-            completionItems.add(completionItem);
-        });
+        return false;
     }
 
     public WorkspaceAPI getWorkspaceAPI() throws WorkspaceAPIException {
