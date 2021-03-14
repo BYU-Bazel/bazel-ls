@@ -124,13 +124,13 @@ public class DiagnosticsProvider {
                                                 boolean fileExists = false;
                                                 Path rootPath = Workspace.getInstance().getRootFolder().getPath();
                                                 if (label.hasPkg() && label.hasTarget()) {
-                                                    Path pkgPath = Paths.get(label.pkg().value());
-                                                    Path targetPath = Paths.get(label.target().value());
+                                                    Path pkgPath = Paths.get(label.pkg());
+                                                    Path targetPath = Paths.get(label.target());
                                                     Path absPath = rootPath.resolve(pkgPath).resolve(targetPath);
                                                     fileExists = Files.exists(absPath);
                                                 } else if (!label.hasPkg() && label.hasTarget()) {
                                                     Path pkgPath = textDocPath.getParent();
-                                                    Path targetPath = Paths.get(label.target().value());
+                                                    Path targetPath = Paths.get(label.target());
                                                     Path absPath = rootPath.resolve(pkgPath).resolve(targetPath);
                                                     fileExists = Files.exists(absPath);
                                                 }
