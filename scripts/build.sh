@@ -28,7 +28,7 @@ fi
 if [[ "$name" == "server" ]]
 then
     (
-        bazel build //server:server_deploy.jar --java_language_version={8}
+        bazel build //server:server_deploy.jar --java_language_version=8
         exit $?
     )
 elif [[ "$name" == "client_vscode" ]]
