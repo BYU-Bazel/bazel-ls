@@ -25,7 +25,7 @@ public class Workspace {
         extensionConfig = null;
         rootFolder = null;
         workspaceFolders = new HashSet<>();
-        workspaceTree = new WorkspaceTree(new Package("/"));
+        workspaceTree = initialWsTree();
     }
 
     public static Workspace getInstance() {
@@ -66,7 +66,18 @@ public class Workspace {
         workspaceFolders.removeAll(folders);
     }
 
-    public void initializeWorkspace() throws BazelServerException {
+    private static WorkspaceTree initialWsTree() {
+        return new WorkspaceTree(new Package("/"));
+    }
+
+    /**
+     * Syncs the workspace tree with all files in memory.
+     *
+     * @throws BazelServerException If something fails.
+     */
+    public void syncWorkspace() throws BazelServerException {
+        workspaceTree = initialWsTree();
+
         List<BuildTarget> buildTargets;
         List<SourceFile> sourceFiles;
         try {

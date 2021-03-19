@@ -38,6 +38,11 @@
             },
             {
                 "category": "Bazel",
+                "command": "bazel.syncServer",
+                "title": "Sync Bazel language server"
+            },
+            {
+                "category": "Bazel",
                 "command": "bazel.restartServer",
                 "title": "Restart language server"
             },
@@ -104,6 +109,19 @@
                     "type": "string",
                     "default": "",
                     "description": "The name of the Bazel executable. This may be an absolute path or a simple name that will be searched for on the system path. If empty, \"bazel\" on the system path will be used."
+                },
+                "bazel.syncMode": {
+                    "type": "string",
+                    "default": "commandOnly",
+                    "enum": [
+                        "showSyncPopup",
+                        "commandOnly"
+                    ],
+                    "markdownDescription": "Controls how the server should present syncs options.",
+                    "enumDescriptions": [
+                        "A sync popup will appear on file save.",
+                        "Server syncing will only be triggered when calling the bazel.syncServer command."
+                    ]
                 },
                 "bazel.buildifier.executable": {
                     "type": "string",

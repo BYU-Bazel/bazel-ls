@@ -71,46 +71,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
             diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
             diagnosticsProvider.handleDiagnostics(diagnosticParams);
         }
-
-        {
-//        PublishDiagnosticsParams diagnostics = new PublishDiagnosticsParams();
-//        diagnostics.setUri(params.getTextDocument().getUri());
-
-//        Diagnostic diagnostic = new Diagnostic();
-//        diagnostic.setMessage("This is a test");
-//        diagnostic.setSource(params.getTextDocument().getUri());
-//        diagnostic.setCode(123);
-//        diagnostic.setRange(new Range(new Position(0, 0)));
-//        logger.info("Set severity");
-//        diagnostic.setSeverity(DiagnosticSeverity.Error);
-//        diagnostics.setDiagnostics(Lists.newArrayList(diagnostic));
-//
-//        logger.info("Publish Diagnostics");
-//        languageClient.publishDiagnostics(diagnostics);
-        }
-
-//        URI uri = URI.create(params.getTextDocument().getUri());
-//        File file = new File(uri);
-//
-//        try {
-//            logger.info(String.format("Attempting to parse file: %s", file.getAbsolutePath()));
-//            ParseInput input = ParseInput.fromFile(file);
-//            logger.info(String.format("Obtained parse input. Content=[\"%s\"], Loc=[\"%s\"]",
-//                    new String(input.getBytes()), input.getPath()));
-//
-//            ParseOutput output = StarlarkFacade.parse(input);
-//            logger.info("Parsed a Starlark file!");
-//        } catch (IOException e) {
-//            logger.error(e);
-//        } catch (ParseException e) {
-//            logger.info(String.format("Caused a %s exception!", e.getClass().getName()));
-//        }
-
-//        try {
-//            Analyzer.getInstance().analyze();
-//        } catch (AnalysisException e) {
-//            logger.info("Unable to analayze project", e);
-//        }
     }
 
     @Override
@@ -118,38 +78,15 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
         logger.info("Did Close");
         logger.info(params.toString());
         DocumentTracker.getInstance().didClose(params);
-
-//        final Buildifier buildifier = new Buildifier();
-//        logger.info("BUILDIFIER EXISTS=" + buildifier.exists());
-//
-//        logger.info("ABOUT TO FORMAT A DOCUMENT!!!!!!");
-//        try {
-//            final URI uri = URI.create(params.getTextDocument().getUri());
-//            final String content = new String(Files.readAllBytes(Paths.get(uri)));
-//
-//            final FormatInput args = new FormatInput();
-//            {
-//                args.setContent(content);
-//                args.setShouldApplyLintFixes(true);
-//                args.setType(BuildifierFileType.BUILD);
-//            }
-//
-//            logger.info("FORMATTING NOW");
-//            final String formattedContent = buildifier.format(args);
-//            logger.info("FORMAT DONE=" + formattedContent);
-//        } catch (BuildifierException e) {
-//            logger.info("BUILDIFER FAILED :( ... error=" + e.getClass());
-//        } catch (Exception e) {
-//            logger.error("FORMATTING FAILED FOR SOME RANDOM REASON...", e);
-//        }
-//
-//        logger.info("Finished buildifier thing");
     }
 
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
         logger.info("Did Save");
         logger.info(params.toString());
+
+        // Handle sync popups.
+        commandProvider.tryRequestSyncServerCommand(languageClient);
     }
 
     @Override
@@ -236,8 +173,8 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
         return commandProvider.executeCommand(params, languageClient);
     }
-    
-    public void sendMessageToClient(MessageType type,String message){
+
+    public void sendMessageToClient(MessageType type, String message) {
         languageClient.showMessage(new MessageParams(type, message));
     }
 }
