@@ -8,6 +8,8 @@ java_library(
     deps = [
         "//server/src/main/java/server/dispatcher",
         "//server/src/main/java/server/bazel/cli",
+        "//server/src/main/java/server/utils",
+        "//server/src/main/java/server/workspace",
         "//third_party/java:gson",
         "//third_party/java:guava",
         "//third_party/java:log4j",

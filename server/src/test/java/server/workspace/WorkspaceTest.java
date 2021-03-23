@@ -10,7 +10,6 @@ import server.bazel.tree.BuildTarget;
 import server.bazel.tree.SourceFile;
 import server.bazel.tree.WorkspaceTree;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,7 @@ public class WorkspaceTest {
         mockBuildTargetList.add(new BuildTarget(Paths.get("main/java/test"), "test_3", "test"));
 
         try{
-            classUnderTest.initializeWorkspace();
+            classUnderTest.syncWorkspace();
         } catch( BazelServerException e){
             System.out.println(e.getMessage());
         }
@@ -75,7 +74,7 @@ public class WorkspaceTest {
         mockBuildTargetList.add(new BuildTarget(Paths.get("main/java/test"), "test_3", "test"));
         mockBuildTargetList.add(new BuildTarget(Paths.get("main/java/test1"), "test_6", "test"));
 
-        classUnderTest.initializeWorkspace();
+        classUnderTest.syncWorkspace();
         WorkspaceTree tree = classUnderTest.getWorkspaceTree();
         WorkspaceTree.Node node = tree.getRoot();
         checkChildrenCount(node, 2);
@@ -87,7 +86,7 @@ public class WorkspaceTest {
         mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_2", "test"));
         mockBuildTargetList.add(new BuildTarget(Paths.get("main"), "test_3", "test"));
         try{
-            classUnderTest.initializeWorkspace();
+            classUnderTest.syncWorkspace();
         } catch( BazelServerException e){
             System.out.println(e.getMessage());
         }
