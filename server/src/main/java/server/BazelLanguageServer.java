@@ -36,7 +36,6 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         logger.info(String.format("Starting up bazel language server with params:\n\"%s\"", params));
-
         initializeWorkspaceRoot(params);
         return CompletableFuture.completedFuture(specifyServerCapabilities());
     }

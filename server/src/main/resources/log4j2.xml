@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Appenders>
+        <!-- Comment out this line when deploying. -->
         <RollingFile name="RollingFile" fileName="logs/server.log" filePattern="logs/$${date:yyyy-MM}/server-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
             <DefaultRolloverStrategy max="20"/>
@@ -10,8 +11,13 @@
         </RollingFile>
     </Appenders>
     <Loggers>
+        <!-- Comment OUT when deploying. -->
         <Root level="info">
             <AppenderRef ref="RollingFile"/>
         </Root>
+        <!-- Comment IN when deploying. -->
+        <!-- <Root level="off">
+            <AppenderRef ref="RollingFile"/>
+        </Root> -->
     </Loggers>
 </Configuration>
