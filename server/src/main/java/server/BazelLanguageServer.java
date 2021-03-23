@@ -35,21 +35,19 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
 
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
-    logger.info(String.format("Starting up bazel language server with params:\n\"%s\"", params));
+        logger.info(String.format("Starting up bazel language server with params:\n\"%s\"", params));
 
         initializeWorkspaceRoot(params);
-        try{
+        try {
             Workspace.getInstance().initializeWorkspace();
             logger.info("workspace initialized");
 
-        } catch( BazelServerException e){
+        } catch (BazelServerException e) {
             logger.info("workspace error");
             String message = "Bazel Extension Failed to parse due to BUILD Parsing errors:\n";
             String fix = "Please fix the Bazel Syntax error then restart the Extension\n";
             bazelServices.sendMessageToClient(MessageType.Error, message + fix + e.getMessage());
-            
         }
-        
 
         return CompletableFuture.completedFuture(specifyServerCapabilities());
     }
@@ -64,7 +62,7 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
         serverCapabilities.setExecuteCommandProvider(new ExecuteCommandOptions(AllCommands.allCommands()));
 
         logger.info(String.format("Declared server capabilities: \"%s\"", serverCapabilities));
-      
+
         return new InitializeResult(serverCapabilities);
     }
 
