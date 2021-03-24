@@ -152,7 +152,7 @@ public final class Buildifier {
             return new Gson().fromJson(output.getRawStandardOutput(), LintOutput.class);
         }
 
-        logger.warn(String.format("Failed to lint with exit code %d.", output.getReturnCode());
+        logger.warn(String.format("Failed to lint with exit code %d.", output.getReturnCode()));
         throw new BuildifierException();
     }
 

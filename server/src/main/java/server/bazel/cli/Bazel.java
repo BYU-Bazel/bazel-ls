@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.lang.StringBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,12 +47,15 @@ public final class Bazel {
 
     private static String parseError(List<String> errorOutput) {
         logger.info("Parsing Error");
+
+        // Assuming all error output could be useful to display to the client.
+        StringBuilder builder = new StringBuilder();
         for (String line : errorOutput) {
-            if (line.startsWith("ERROR")) {
-                return line;
-            }
+            builder.append(line);
+            builder.append("\n");
         }
-        return "Unknown Bazel Error";
+
+        return builder.toString();
     }
 
     private static List<BuildTarget> parseBuildTargets(List<String> standardOutput) {
