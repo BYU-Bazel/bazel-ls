@@ -81,7 +81,7 @@ public final class Buildifier {
             cmdArgs = cmdArgsList.toArray(new String[0]);
         }
 
-        logger.info(String.format("Formatting content \"%s\".", input.getContent()));
+        logger.info("Formatting content \"%s\".");
 
         // Run the buildifier.
         final BuildifierCommand command = new BuildifierCommand();
@@ -91,7 +91,7 @@ public final class Buildifier {
 
         // Return the successfully formated contents if the exit code indicated a valid format result.
         if (output.getReturnCode() == 0) {
-            logger.info(String.format("Successfully formatted content: \"%s\"", output.getRawStandardOutput()));
+            logger.info("Successfully formatted content.");
             return new FormatOutput(output.getRawStandardOutput());
         }
 
@@ -139,7 +139,7 @@ public final class Buildifier {
             cmdArgs = cmdArgsList.toArray(new String[0]);
         }
 
-        logger.info(String.format("Linting content \"%s\".", input.getContent()));
+        logger.info("Linting content.");
 
         // Run buildifier
         final BuildifierCommand command = new BuildifierCommand();
@@ -148,12 +148,11 @@ public final class Buildifier {
         final CommandOutput output = runCommand(command);
 
         if (output.didSucceed()) {
-            logger.info(String.format("Successfully linted content: \"%s\"", output.getRawStandardOutput()));
+            logger.info("Successfully linted content.");
             return new Gson().fromJson(output.getRawStandardOutput(), LintOutput.class);
         }
 
-        logger.warn(String.format("Failed to lint with exit code %d. Error output is \"%s\"",
-                output.getReturnCode(), output.getRawErrorOutput()));
+        logger.warn(String.format("Failed to lint with exit code %d.", output.getReturnCode());
         throw new BuildifierException();
     }
 
