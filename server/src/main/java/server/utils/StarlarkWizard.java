@@ -69,7 +69,15 @@ public class StarlarkWizard {
     public Range rangeFromExpression(Expression expr) {
         final int line = expr.getStartLocation().line() - 1;
         final int colstart = expr.getStartLocation().column();
-        final int colend = expr.getEndLocation().column();
+
+        final int colend;
+        if (expr.kind() == Expression.Kind.STRING_LITERAL) {
+            StringLiteral literal =(StringLiteral) expr;
+            colend = colstart + literal.getValue().length();
+        } else {
+            colend = expr.getEndLocation().column();
+        }
+
         return new Range(new Position(line, colstart), new Position(line, colend));
     }
 

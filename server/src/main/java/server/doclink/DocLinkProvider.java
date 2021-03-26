@@ -56,10 +56,8 @@ public class DocLinkProvider {
         final List<DocumentLink> result = new ArrayList<>();
         final URI fileURI = URI.create(params.getTextDocument().getUri());
         final Path filePath = Paths.get(fileURI).toAbsolutePath();
-        logger.info("FILE PATH = " + filePath);
         final DocumentTracker tracker = getTracker();
         final String content = tracker.getContents(filePath.toUri());
-        logger.info("CONTENT = " + content);
 
         // Keep references for context when running this provider.
         currentDocPath = filePath;

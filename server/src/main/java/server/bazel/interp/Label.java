@@ -1,8 +1,6 @@
 package server.bazel.interp;
 
 import com.google.common.base.Preconditions;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import server.utils.Nullability;
 
 import java.nio.file.Path;
@@ -15,8 +13,6 @@ import java.util.regex.Pattern;
  * Represents a Bazel target label. E.g. `@maven//some/other:package_name`.
  */
 public class Label {
-    private static final Logger logger = LogManager.getLogger(Label.class);
-
     private final String workspace;
     private final String pkg;
     private final String target;
@@ -134,9 +130,7 @@ public class Label {
         // Resolve the full path.
         {
             Path resolved = workspacePath.resolve(pkgPath).resolve(targetPath);
-            logger.info("FULL PATH: " + resolved);
             resolved = input.getFileRepository().getFileSystem().getPath(resolved.toString());
-            logger.info("FULL PATH FILE REPO: " + resolved);
             if (input.getFileRepository().isFile(resolved)) {
                 output.setPath(resolved);
                 return output;
@@ -148,8 +142,6 @@ public class Label {
             final Path resolved = workspacePath.resolve(pkgPath);
             final Path buildResolved = resolved.resolve(Paths.get("BUILD")).toAbsolutePath();
             final Path buildBazelResolved = resolved.resolve(Paths.get("BUILD.bazel")).toAbsolutePath();
-            logger.info("FULL PATH buildResolved: " + buildResolved);
-            logger.info("FULL PATH buildBazelResolved: " + buildBazelResolved);
 
             if (input.getFileRepository().isFile(buildResolved)) {
                 output.setPath(buildResolved);
