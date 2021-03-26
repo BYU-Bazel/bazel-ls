@@ -72,7 +72,7 @@ public class StarlarkWizard {
 
         final int colend;
         if (expr.kind() == Expression.Kind.STRING_LITERAL) {
-            StringLiteral literal =(StringLiteral) expr;
+            StringLiteral literal = (StringLiteral) expr;
             colend = colstart + literal.getValue().length();
         } else {
             colend = expr.getEndLocation().column();
@@ -96,7 +96,6 @@ public class StarlarkWizard {
 
         public Iterable<Expression> deps() {
             return deps;
-
         }
     }
 }

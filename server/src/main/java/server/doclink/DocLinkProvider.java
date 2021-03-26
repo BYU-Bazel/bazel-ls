@@ -52,7 +52,6 @@ public class DocLinkProvider {
         Preconditions.checkNotNull(getTracker());
         Preconditions.checkNotNull(getWizard());
 
-
         final List<DocumentLink> result = new ArrayList<>();
         final URI fileURI = URI.create(params.getTextDocument().getUri());
         final Path filePath = Paths.get(fileURI).toAbsolutePath();
