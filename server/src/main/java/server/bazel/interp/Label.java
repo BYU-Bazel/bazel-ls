@@ -1,7 +1,12 @@
 package server.bazel.interp;
 
+import com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import server.utils.Nullability;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,6 +15,8 @@ import java.util.regex.Pattern;
  * Represents a Bazel target label. E.g. `@maven//some/other:package_name`.
  */
 public class Label {
+    private static final Logger logger = LogManager.getLogger(Label.class);
+
     private final String workspace;
     private final String pkg;
     private final String target;
@@ -77,6 +84,85 @@ public class Label {
                 hasRoot ? Nullability.nullableOr("", () -> pkgValue) : null,
                 hasTarget ? targetValue : null
         );
+    }
+
+    /**
+     * Converts this label into a path. External workspaces are not supported at the moment.
+     *
+     * @param input Context by which to resolve this label.
+     * @return The resolved label result.
+     * @throws LabelNotFoundException If the path of this label couldn't be resolved.
+     */
+    public LabelResolveOutput resolve(LabelResolveInput input) throws LabelNotFoundException {
+        Preconditions.checkNotNull(input.getLocalWorkspacePath());
+        Preconditions.checkNotNull(input.getLocalDeclaringFilePath());
+        Preconditions.checkNotNull(input.getFileRepository());
+
+        final LabelResolveOutput output = new LabelResolveOutput();
+
+        // Only local workspaces are supported at the moment.
+        final Path workspacePath;
+        if (hasWorkspace()) {
+            throw new UnsupportedOperationException();
+        } else {
+            workspacePath = input.getLocalWorkspacePath().toAbsolutePath();
+        }
+
+        // The path to the declaring package. Local labels are special. The base path
+        // must be inferred based on the path of the current package. If the label isn't
+        // local, then hand the path absolutely.
+        final Path pkgPath;
+        if (isLocal()) {
+            String temp = input.getLocalDeclaringFilePath().getParent().toAbsolutePath().toString();
+            temp = temp.substring(workspacePath.toString().length());
+            pkgPath = Paths.get(temp);
+        } else if (hasPkg()) {
+            pkgPath = Paths.get(pkg());
+        } else {
+            pkgPath = Paths.get("/");
+        }
+
+        // The path to the target within the package. This could be empty if the target
+        // is to be inferred from the package path.
+        final Path targetPath;
+        if (hasTarget()) {
+            targetPath = Paths.get(target());
+        } else {
+            targetPath = Paths.get("/");
+        }
+
+        // Resolve the full path.
+        {
+            Path resolved = workspacePath.resolve(pkgPath).resolve(targetPath);
+            logger.info("FULL PATH: " + resolved);
+            resolved = input.getFileRepository().getFileSystem().getPath(resolved.toString());
+            logger.info("FULL PATH FILE REPO: " + resolved);
+            if (input.getFileRepository().isFile(resolved)) {
+                output.setPath(resolved);
+                return output;
+            }
+        }
+
+        // Resolve the path as an inferred build file.
+        {
+            final Path resolved = workspacePath.resolve(pkgPath);
+            final Path buildResolved = resolved.resolve(Paths.get("BUILD")).toAbsolutePath();
+            final Path buildBazelResolved = resolved.resolve(Paths.get("BUILD.bazel")).toAbsolutePath();
+            logger.info("FULL PATH buildResolved: " + buildResolved);
+            logger.info("FULL PATH buildBazelResolved: " + buildBazelResolved);
+
+            if (input.getFileRepository().isFile(buildResolved)) {
+                output.setPath(buildResolved);
+                return output;
+            }
+
+            if (input.getFileRepository().isFile(buildBazelResolved)) {
+                output.setPath(buildBazelResolved);
+                return output;
+            }
+        }
+
+        throw new LabelNotFoundException("Unable to resolve label path.");
     }
 
     /**

@@ -182,6 +182,8 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
         logger.info(String.format("Handling document link: %s", params));
+        docLinkProvider.setTracker(DocumentTracker.getInstance());
+        docLinkProvider.setWizard(wizard);
         return docLinkProvider.handleDocLink(params);
     }
 

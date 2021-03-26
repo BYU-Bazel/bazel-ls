@@ -1,5 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_library", "java_binary")
 
+package(default_visibility = ["//visibility:public"])
+
 java_library(
     name = "interp",
     srcs = glob(["*.java"]),
@@ -12,8 +14,4 @@ java_library(
         "//third_party/java:lsp4j",
         "//third_party/java:starlark",
     ],
-    visibility = [
-        "//server/src/main/java/server/diagnostics:__subpackages__",
-        "//server/src/test/java/server/bazel/interp:__subpackages__",
-    ]
 )
