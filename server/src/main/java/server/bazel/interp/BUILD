@@ -9,6 +9,7 @@ java_library(
         "//server/src/main/java/server/workspace",
         "//third_party/java:guava",
         "//third_party/java:log4j",
+        "//third_party/java:lsp4j",
         "//third_party/java:starlark",
     ],
     visibility = [

@@ -12,10 +12,12 @@ java_library(
         "Nullability.java",
         "Observatory.java",
         "Positions.java",
+        "StarlarkWizard.java",
     ],
     deps = [
         "//third_party/java:guava",
         "//third_party/java:log4j",
         "//third_party/java:lsp4j",
+        "//third_party/java:starlark",
     ],
 )

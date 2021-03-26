@@ -13,6 +13,7 @@ import server.bazel.tree.BuildTarget;
 import server.bazel.tree.WorkspaceTree;
 import server.utils.DocumentTracker;
 import server.utils.Logging;
+import server.utils.StarlarkWizard;
 import server.workspace.Workspace;
 
 import java.net.URI;
@@ -31,67 +32,13 @@ public class DiagnosticsProvider {
     private static final Logger logger = LogManager.getLogger(DiagnosticsProvider.class);
 
     private Path textDocPath;
+    private StarlarkWizard wizard;
 
     public DiagnosticsProvider() {
         super();
     }
 
-    private List<TargetMetaData> locateTargetMetaData(StarlarkFile file) {
-        final List<TargetMetaData> result = new ArrayList<>();
-
-        for (final Statement stmt : file.getStatements()) {
-            if (stmt.kind() == Statement.Kind.EXPRESSION) {
-                final Expression expr = ((ExpressionStatement) stmt).getExpression();
-                if (expr.kind() == Expression.Kind.CALL) {
-                    final TargetMetaData data = new TargetMetaData();
-
-                    // Create mapping of all named parameters.
-                    final CallExpression call = (CallExpression) expr;
-                    final Map<String, Expression> callArgs = new HashMap<>();
-                    for (final Argument arg : call.getArguments()) {
-                        if (arg.getName() == null) {
-                            continue;
-                        }
-
-                        callArgs.put(arg.getName(), arg.getValue());
-                    }
-
-                    // A target must have a name.
-                    if (callArgs.containsKey("name") && callArgs.get("name").kind() == Expression.Kind.STRING_LITERAL) {
-                        data.name = (StringLiteral) callArgs.get("name");
-                    } else {
-                        continue;
-                    }
-
-                    // Locate all srcs that are lists. Treat each element as a label.
-                    if (callArgs.containsKey("srcs") && callArgs.get("srcs").kind() == Expression.Kind.LIST_EXPR) {
-                        final ListExpression listExpr = (ListExpression) callArgs.get("srcs");
-                        data.srcs.addAll(listExpr.getElements());
-                    }
-
-                    // Locate all srcs that are lists. Treat each element as a label.
-                    if (callArgs.containsKey("deps") && callArgs.get("deps").kind() == Expression.Kind.LIST_EXPR) {
-                        final ListExpression listExpr = (ListExpression) callArgs.get("deps");
-                        data.deps.addAll(listExpr.getElements());
-                    }
-
-                    // Cache this as a valid target meta data item.
-                    result.add(data);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private Range rangeFromExpression(Expression expr) {
-        final int line = expr.getStartLocation().line() - 1;
-        final int colstart = expr.getStartLocation().column();
-        final int colend = expr.getEndLocation().column();
-        return new Range(new Position(line, colstart), new Position(line, colend));
-    }
-
-    private List<Diagnostic> getDiagnosticsForLabelList(List<Expression> expressions) {
+    private List<Diagnostic> getDiagnosticsForLabelList(Iterable<Expression> expressions) {
         final WorkspaceTree tree = Workspace.getInstance().getWorkspaceTree();
         final WorkspaceAPI api = new WorkspaceAPI(tree);
 
@@ -99,7 +46,7 @@ public class DiagnosticsProvider {
         final Set<String> labelsInList = new HashSet<>();
 
         for (final Expression expr : expressions) {
-            final Range range = rangeFromExpression(expr);
+            final Range range = wizard.rangeFromExpression(expr);
 
             // Labels must be strings.
             if (expr.kind() != Expression.Kind.STRING_LITERAL) {
@@ -193,6 +140,7 @@ public class DiagnosticsProvider {
 
         final URI textDocURI = params.getUri();
         textDocPath = Paths.get(textDocURI);
+        wizard = params.getWizard();
         final String textDocContent = DocumentTracker.getInstance().getContents(textDocURI);
 
         // Parse the starlark file.
@@ -226,36 +174,36 @@ public class DiagnosticsProvider {
         }
 
         // Interpret all targets and gather information for diagnostics.
-        final List<TargetMetaData> targetMetaData = locateTargetMetaData(file);
+        final List<StarlarkWizard.TargetMeta> targetMetaData = wizard.locateTargets(file);
         final Map<String, StringLiteral> allTargetNames = new HashMap<>();
-        for (final TargetMetaData data : targetMetaData) {
+        for (final StarlarkWizard.TargetMeta data : targetMetaData) {
             // Add all diagnostics for srcs attributes.
             {
-                final List<Diagnostic> srcDiagnostics = getDiagnosticsForLabelList(data.srcs);
+                final List<Diagnostic> srcDiagnostics = getDiagnosticsForLabelList(data.srcs());
                 diagnostics.addAll(srcDiagnostics);
             }
 
             // Add all diagnostics for deps attributes.
             {
-                final List<Diagnostic> srcDiagnostics = getDiagnosticsForLabelList(data.deps);
+                final List<Diagnostic> srcDiagnostics = getDiagnosticsForLabelList(data.deps());
                 diagnostics.addAll(srcDiagnostics);
             }
 
             // Track duplicate target names.
             {
-                final String nameValue = data.name.getValue();
+                final String nameValue = data.name().getValue();
 
                 if (allTargetNames.containsKey(nameValue)) {
                     Diagnostic diag = new Diagnostic();
                     diag.setSeverity(DiagnosticSeverity.Warning);
                     diag.setCode(DiagnosticCodes.DUPLICATE_TARGET);
                     diag.setMessage(String.format("Duplicate target '%s' found in file.", nameValue));
-                    diag.setRange(rangeFromExpression(data.name));
+                    diag.setRange(wizard.rangeFromExpression(data.name()));
                     diagnostics.add(diag);
                     continue;
                 }
 
-                allTargetNames.put(nameValue, data.name);
+                allTargetNames.put(nameValue, data.name());
             }
         }
 
@@ -264,11 +212,5 @@ public class DiagnosticsProvider {
         diagnosticsParams.setUri(params.getUri().toString());
         diagnosticsParams.setDiagnostics(diagnostics);
         params.getClient().publishDiagnostics(diagnosticsParams);
-    }
-
-    private static class TargetMetaData {
-        public StringLiteral name = null;
-        public List<Expression> srcs = new ArrayList<>();
-        public List<Expression> deps = new ArrayList<>();
     }
 }

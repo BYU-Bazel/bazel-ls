@@ -17,8 +17,11 @@ import server.commands.CommandProvider;
 import server.completion.CompletionProvider;
 import server.diagnostics.DiagnosticParams;
 import server.diagnostics.DiagnosticsProvider;
+import server.doclink.DocLinkProvider;
+import server.doclink.DocLinkResolver;
 import server.formatting.FormattingProvider;
 import server.utils.DocumentTracker;
+import server.utils.StarlarkWizard;
 import server.workspace.ExtensionConfig;
 import server.workspace.ProjectFolder;
 import server.workspace.Workspace;
@@ -33,14 +36,20 @@ import java.util.stream.Collectors;
 public class BazelServices implements TextDocumentService, WorkspaceService, LanguageClientAware {
     private static final Logger logger = LogManager.getLogger(BazelServices.class);
 
+    private StarlarkWizard wizard;
     private LanguageClient languageClient;
     private DiagnosticsProvider diagnosticsProvider;
     private CommandProvider commandProvider;
+    private DocLinkProvider docLinkProvider;
+    private DocLinkResolver docLinkResolver;
 
     public BazelServices() {
+        wizard = new StarlarkWizard();
         languageClient = null;
         diagnosticsProvider = new DiagnosticsProvider();
         commandProvider = new CommandProvider();
+        docLinkProvider = new DocLinkProvider();
+        docLinkResolver = new DocLinkResolver();
     }
 
     @Override
@@ -49,6 +58,7 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
         DocumentTracker.getInstance().didOpen(params);
         {
             final DiagnosticParams diagnosticParams = new DiagnosticParams();
+            diagnosticParams.setWizard(wizard);
             diagnosticParams.setClient(languageClient);
             diagnosticParams.setTracker(DocumentTracker.getInstance());
             diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
@@ -64,6 +74,7 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
         // Handle diagnostics.
         {
             final DiagnosticParams diagnosticParams = new DiagnosticParams();
+            diagnosticParams.setWizard(wizard);
             diagnosticParams.setClient(languageClient);
             diagnosticParams.setTracker(DocumentTracker.getInstance());
             diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
@@ -164,7 +175,20 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     @Override
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
+        logger.info(String.format("Executing command: %s", params));
         return commandProvider.executeCommand(params, languageClient);
+    }
+
+    @Override
+    public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
+        logger.info(String.format("Handling document link: %s", params));
+        return docLinkProvider.handleDocLink(params);
+    }
+
+    @Override
+    public CompletableFuture<DocumentLink> documentLinkResolve(DocumentLink params) {
+        logger.info(String.format("Resolving document link: %s", params));
+        return docLinkResolver.resolveDocLink(params);
     }
 
     public void sendMessageToClient(MessageType type, String message) {
