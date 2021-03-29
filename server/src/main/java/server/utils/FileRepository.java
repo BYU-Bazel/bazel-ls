@@ -99,8 +99,6 @@ public final class FileRepository {
      * @return The path to the file or null if the file wasn't found.
      */
     public Path searchPATH(String filename) {
-        logger.info(String.format("Searching PATH for filename: \"%s\"", filename));
-
         try {
             for (final Path dir : getPATHDirs()) {
                 final List<Path> files = Files.walk(dir)
@@ -114,15 +112,11 @@ public final class FileRepository {
                 }
 
                 // Return the first file that matches.
-                final Path path = files.get(0);
-                logger.info(String.format("Located filename in PATH: \"%s\"", path));
-                return path;
+                return files.get(0);
             }
 
-            logger.info(String.format("Unable to find filename \"%s\" in PATH.", filename));
             return null;
         } catch (IOException e) {
-            logger.error("Failed to search PATH.", e);
             return null;
         }
     }

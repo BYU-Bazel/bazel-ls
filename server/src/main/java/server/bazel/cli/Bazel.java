@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.lang.StringBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,19 +47,21 @@ public final class Bazel {
 
     private static String parseError(List<String> errorOutput) {
         logger.info("Parsing Error");
+
+        // Assuming all error output could be useful to display to the client.
+        StringBuilder builder = new StringBuilder();
         for (String line : errorOutput) {
-            if (line.startsWith("ERROR")) {
-                return line;
-            }
+            builder.append(line);
+            builder.append("\n");
         }
-        return "Unknown Bazel Error";
+
+        return builder.toString();
     }
 
     private static List<BuildTarget> parseBuildTargets(List<String> standardOutput) {
         logger.info("Parsing Build Targets");
         List<BuildTarget> buildTargets = new ArrayList<>();
         standardOutput.stream().forEach(line -> {
-            logger.info(line);
             List<String> parts = Arrays.asList(line.split("\\s+"));
             List<String> ruleSplit = parsePath(parts.get(2));
             buildTargets.add(new BuildTarget(Paths.get(ruleSplit.get(0).substring(1)), ruleSplit.get(1), parts.get(0)));
@@ -91,7 +94,6 @@ public final class Bazel {
         logger.info("Parsing Source Files");
         List<SourceFile> sourceFiles = new ArrayList<>();
         standardOutput.stream().forEach(line -> {
-            logger.info(line);
             List<String> parts = Arrays.asList(line.split("\\s+"));
             List<String> ruleSplit = parsePath(parts.get(2));
             sourceFiles.add(new SourceFile(ruleSplit.get(1), Paths.get(ruleSplit.get(0))));

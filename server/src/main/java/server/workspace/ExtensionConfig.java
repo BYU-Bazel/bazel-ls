@@ -26,10 +26,12 @@ public class ExtensionConfig {
     public static class Bazel {
         private Buildifier buildifier;
         private Java java;
+        private SyncMode syncMode;
 
         public Bazel() {
             buildifier = null;
             java = null;
+            syncMode = null;
         }
 
         public Buildifier getBuildifier() {
@@ -47,6 +49,22 @@ public class ExtensionConfig {
         public void setJava(Java java) {
             this.java = java;
         }
+
+        public SyncMode getSyncMode() {
+            return syncMode;
+        }
+
+        public void setSyncMode(SyncMode syncMode) {
+            this.syncMode = syncMode;
+        }
+    }
+
+    /**
+     * Controls how the server should present syncs options.
+     */
+    public enum SyncMode {
+        showSyncPopup,
+        commandOnly,
     }
 
     /**

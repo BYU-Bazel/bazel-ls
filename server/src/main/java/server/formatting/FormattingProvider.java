@@ -38,17 +38,14 @@ public class FormattingProvider {
 
         FormatInput formatInput = new FormatInput();
         String stringUri = params.getTextDocument().getUri();
-        logger.info("Formatting file from: " + stringUri);
         File file = getFileFromUriString(stringUri);
 
         if (file == null) {
-            logger.info("Could not find file");
+            logger.error("Could not find file.");
             return CompletableFuture.completedFuture(new ArrayList<TextEdit>());
         }
 
         String name = file.getName();
-        logger.info("Formatting file: " + name);
-
         if (name.equals("BUILD")) {
             formatInput.setType(BuildifierFileType.BUILD);
         } else if (name.equals("WORKSPACE")) {
@@ -76,8 +73,7 @@ public class FormattingProvider {
         List<TextEdit> results = new ArrayList<>();
         results.add(result);
 
-        logger.info("File formatted");
-
+        logger.info("File formatted.");
         return CompletableFuture.completedFuture(results);
     }
 

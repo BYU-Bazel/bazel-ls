@@ -58,6 +58,7 @@ public class CodeLensProvider {
         catch(Exception e) {
             logger.error("Unable to get URI: " + e);
         }
+        
         String path = buildPath(uri);
         List<BuildTarget> targets = findTargets(path);
         String contents = documentTracker.getContents(uri);
