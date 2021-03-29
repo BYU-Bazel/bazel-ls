@@ -62,7 +62,10 @@ public class CompletionProvider {
             } else if (triggerCharacter.equals(":")) {
                 getBuildTargets(line, completionParams, completionItems);
             } else if (triggerCharacter.equals("\"")) {
-                getSourceFiles(getRelativePath(completionParams), completionItems, completionParams);
+                if(!isName(line)) {
+                    String relativePath = getRelativePath(completionParams);
+                    getSourceFiles( relativePath.length() > 1 ? relativePath : "", completionItems, completionParams);
+                }
             }
 
         } catch (Exception e) {
@@ -71,6 +74,11 @@ public class CompletionProvider {
 
         return CompletableFuture.completedFuture(Either.forRight(new CompletionList(completionItems)));
 
+    }
+
+    private boolean isName(String line) {
+        String cleaned = line.trim();
+        return cleaned.startsWith("name");
     }
 
     public DocumentTracker getDocumentTracker() {
@@ -119,18 +127,19 @@ public class CompletionProvider {
             completionItem.setTextEdit(new TextEdit(new Range(completionParams.getPosition(), new Position(completionParams.getPosition().getLine(), completionParams.getPosition().getCharacter())), item.toString()));
             completionItems.add(completionItem);
         });
-        getSourceFiles(newPath, completionItems, completionParams);
+        getSourceFiles(newPath.substring(2), completionItems, completionParams);
     }
 
     private void getSourceFiles(String newPath, List<CompletionItem> completionItems, CompletionParams completionParams) {
-        Path path = Workspace.getInstance().getRootFolder().getPath().resolve(newPath.substring(2));
+        Path path = Workspace.getInstance().getRootFolder().getPath().resolve(newPath);
+        logger.info("Path: {}", path.toString());
         List<File> fileList = new ArrayList<>();
         File directory = new File(path.toUri());
         if(directory.isDirectory()) {
             fileList.addAll(Arrays.asList(directory.listFiles()));
         }
         fileList.forEach(item -> {
-            if(!checkForExisting(item, completionItems)) {
+            if(!checkForExisting(item, completionItems) && !isExcludableItem(item)) {
                 CompletionItem completionItem = new CompletionItem(item.getName());
                 if (item.isDirectory()) {
                     completionItem.setKind(CompletionItemKind.Folder);
@@ -144,7 +153,18 @@ public class CompletionProvider {
         });
     }
 
+    private boolean isExcludableItem(File item) {
+        String fileName = item.getName().toLowerCase();
+        String fileExtension = "";
+        if(fileName.contains(".")) {
+            fileExtension = fileName.split("\\.")[1];
+        }
+        return fileName.equals("build") || fileName.equals("workspace") || fileExtension.equals("bazel") || fileExtension.equals("bzl");
+    }
+
     private boolean checkForExisting(File file, List<CompletionItem> completionItems) {
+        logger.info("File: {}", file.toString());
+        logger.info("Completion Items: {}", completionItems.toString());
         for(CompletionItem item : completionItems) {
             if(item.getLabel().equals(file.getName())) {
                 return true;

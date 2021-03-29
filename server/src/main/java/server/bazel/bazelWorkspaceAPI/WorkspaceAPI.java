@@ -63,6 +63,7 @@ public class WorkspaceAPI {
      * @throws WorkspaceAPIException if the pathToPackage is an invalid path within the given Workspace
      */
     public List<BuildTarget> findPossibleTargetsForPath(Path pathToPackage) throws WorkspaceAPIException {
+        logger.info("Path to package: {}", pathToPackage.toString());
         ArrayList<BuildTarget> allPossibleTargets = new ArrayList<>();
 
         Package packageFromPath =  findNodeOfGivenPackagePath(pathToPackage).getValue();
@@ -152,6 +153,7 @@ public class WorkspaceAPI {
      * @throws WorkspaceAPIException if path is not in given workspace tree
      */
     private Node findNodeOfGivenPackagePath(Path path) throws WorkspaceAPIException {
+        logger.info("Path: {}", path.toString());
         Node lastNode;
 
         lastNode = workspaceTree.getRoot();
