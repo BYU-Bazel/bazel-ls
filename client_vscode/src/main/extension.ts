@@ -53,13 +53,14 @@ export function activate(context: vscode.ExtensionContext): void {
           const extension = "/BUILD" + extensionOption;
           if (fs.existsSync(buildPath + extension)) {
             buildPath = buildPath + extension;
+            vscode.window.showTextDocument(vscode.Uri.file(buildPath))
             break loop1;
           }
         }
         buildPath = buildPath.substr(0, buildPath.length - (pathParts[i].length) - 1);
       }
-      // vscode.window.showTextDocument(vscode.Uri.file(buildPath))
-      vscode.commands.executeCommand("workbench.action.quickOpen", buildPath);
+      vscode.window.showErrorMessage("Can not navigate to BUILD file. No BUILD file detected for source file");
+      // vscode.commands.executeCommand("workbench.action.quickOpen", buildPath);
     } else {
       const message = "Bazel-Plugin: Working folder not found, open a folder an try again";
       vscode.window.showErrorMessage(message);
