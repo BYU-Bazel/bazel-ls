@@ -53,7 +53,7 @@ export function activate(context: vscode.ExtensionContext): void {
           const extension = "/BUILD" + extensionOption;
           if (fs.existsSync(buildPath + extension)) {
             buildPath = buildPath + extension;
-            vscode.window.showTextDocument(vscode.Uri.file(buildPath))
+            vscode.window.showTextDocument(vscode.Uri.file(buildPath));
             break loop1;
           }
         }
