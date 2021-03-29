@@ -46,7 +46,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         logger.info("Did Open");
-        logger.info(params.toString());
         DocumentTracker.getInstance().didOpen(params);
         {
             final DiagnosticParams diagnosticParams = new DiagnosticParams();
@@ -60,7 +59,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
         logger.info("Did Change");
-        logger.info(params.toString());
         DocumentTracker.getInstance().didChange(params);
 
         // Handle diagnostics.
@@ -76,14 +74,12 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
         logger.info("Did Close");
-        logger.info(params.toString());
         DocumentTracker.getInstance().didClose(params);
     }
 
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
         logger.info("Did Save");
-        logger.info(params.toString());
 
         // Handle sync popups.
         commandProvider.tryRequestSyncServerCommand(languageClient);
@@ -92,7 +88,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didChangeConfiguration(DidChangeConfigurationParams params) {
         logger.info("Did Change Configuration");
-        logger.info(params.toString());
 
         // Update extension configuration.
         final Gson gson = new Gson();
@@ -104,13 +99,11 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
         logger.info("Did Change Watched Files");
-        logger.info(params.toString());
     }
 
     @Override
     public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
         logger.info("Did Change Workspace Folders");
-        logger.info(params.toString());
 
         final Collection<ProjectFolder> foldersToAdd = params.getEvent().getAdded().stream()
                 .map(e -> ProjectFolder.fromURI(e.getUri()))

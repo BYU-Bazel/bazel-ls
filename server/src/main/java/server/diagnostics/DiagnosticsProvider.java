@@ -186,8 +186,6 @@ public class DiagnosticsProvider {
     }
 
     public void handleDiagnostics(DiagnosticParams params) {
-        logger.info(String.format("Handling diagnostics for params:\n%s", params));
-
         Preconditions.checkNotNull(params);
         Preconditions.checkNotNull(params.getClient());
         Preconditions.checkNotNull(params.getTracker());
@@ -198,7 +196,6 @@ public class DiagnosticsProvider {
         final String textDocContent = DocumentTracker.getInstance().getContents(textDocURI);
 
         // Parse the starlark file.
-        logger.info("Attempting to parse starlark file for syntax highlighting.");
         final StarlarkFile file;
         try {
             final ParserInput input = ParserInput.fromString(textDocContent, textDocURI.toString());
