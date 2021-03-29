@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
@@ -64,8 +65,27 @@ public final class FileRepository {
      * @return Whether the provided file is executable.
      */
     public boolean isExecutable(Path path) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
         // It's hard to mock this behavior using Jimfs, so it is instead provided as a wrapper here.
         return path.toFile().canExecute();
+    }
+
+    /**
+     * Checks to see if a path is a file.
+     *
+     * @param path The path to check.
+     * @return Whether the provided file is a file.
+     */
+    public boolean isFile(Path path) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
+        final File file = path.toFile();
+        return file.isFile() && !file.isDirectory();
     }
 
     /**
