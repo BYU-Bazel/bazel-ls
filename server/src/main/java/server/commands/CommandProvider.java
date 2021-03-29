@@ -100,7 +100,11 @@ public class CommandProvider {
         } catch (BazelServerException e) {
             MessageParams msg = new MessageParams();
             msg.setType(MessageType.Warning);
-            msg.setMessage(String.format("Unable to sync server. Reason: %s", e.getMessage()));
+            msg.setMessage(String.format(
+                "Unable to sync the server because issues were found in the codebase... Try fixing " +
+                "all syntax errors and ensuring that all targets are valid. Bazel error output:\n\n%s", 
+                e.getMessage()
+            ));
             languageClient.showMessage(msg);
         }
     }
