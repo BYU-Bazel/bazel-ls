@@ -14,6 +14,7 @@ java_library(
         "//server/src/main/java/server/commands",
         "//server/src/main/java/server/completion",
         "//server/src/main/java/server/diagnostics",
+        "//server/src/main/java/server/doclink",
         "//server/src/main/java/server/formatting",
         "//server/src/main/java/server/utils",
         "//server/src/main/java/server/workspace",
