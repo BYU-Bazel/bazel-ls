@@ -12,3 +12,11 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "test_case",
+    srcs = [
+        "//test:number_test.py",
+    ],
+    main = "//test:number_test.py",
+)
+
