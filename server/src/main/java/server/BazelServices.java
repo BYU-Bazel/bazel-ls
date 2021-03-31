@@ -17,8 +17,11 @@ import server.commands.CommandProvider;
 import server.completion.CompletionProvider;
 import server.diagnostics.DiagnosticParams;
 import server.diagnostics.DiagnosticsProvider;
+import server.doclink.DocLinkProvider;
+import server.doclink.DocLinkResolver;
 import server.formatting.FormattingProvider;
 import server.utils.DocumentTracker;
+import server.utils.StarlarkWizard;
 import server.workspace.ExtensionConfig;
 import server.workspace.ProjectFolder;
 import server.workspace.Workspace;
@@ -33,23 +36,29 @@ import java.util.stream.Collectors;
 public class BazelServices implements TextDocumentService, WorkspaceService, LanguageClientAware {
     private static final Logger logger = LogManager.getLogger(BazelServices.class);
 
+    private StarlarkWizard wizard;
     private LanguageClient languageClient;
     private DiagnosticsProvider diagnosticsProvider;
     private CommandProvider commandProvider;
+    private DocLinkProvider docLinkProvider;
+    private DocLinkResolver docLinkResolver;
 
     public BazelServices() {
+        wizard = new StarlarkWizard();
         languageClient = null;
         diagnosticsProvider = new DiagnosticsProvider();
         commandProvider = new CommandProvider();
+        docLinkProvider = new DocLinkProvider();
+        docLinkResolver = new DocLinkResolver();
     }
 
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         logger.info("Did Open");
-        logger.info(params.toString());
         DocumentTracker.getInstance().didOpen(params);
         {
             final DiagnosticParams diagnosticParams = new DiagnosticParams();
+            diagnosticParams.setWizard(wizard);
             diagnosticParams.setClient(languageClient);
             diagnosticParams.setTracker(DocumentTracker.getInstance());
             diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
@@ -60,12 +69,12 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
         logger.info("Did Change");
-        logger.info(params.toString());
         DocumentTracker.getInstance().didChange(params);
 
         // Handle diagnostics.
         {
             final DiagnosticParams diagnosticParams = new DiagnosticParams();
+            diagnosticParams.setWizard(wizard);
             diagnosticParams.setClient(languageClient);
             diagnosticParams.setTracker(DocumentTracker.getInstance());
             diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
@@ -76,14 +85,12 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
         logger.info("Did Close");
-        logger.info(params.toString());
         DocumentTracker.getInstance().didClose(params);
     }
 
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
         logger.info("Did Save");
-        logger.info(params.toString());
 
         // Handle sync popups.
         commandProvider.tryRequestSyncServerCommand(languageClient);
@@ -92,7 +99,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didChangeConfiguration(DidChangeConfigurationParams params) {
         logger.info("Did Change Configuration");
-        logger.info(params.toString());
 
         // Update extension configuration.
         final Gson gson = new Gson();
@@ -104,13 +110,11 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
         logger.info("Did Change Watched Files");
-        logger.info(params.toString());
     }
 
     @Override
     public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
         logger.info("Did Change Workspace Folders");
-        logger.info(params.toString());
 
         final Collection<ProjectFolder> foldersToAdd = params.getEvent().getAdded().stream()
                 .map(e -> ProjectFolder.fromURI(e.getUri()))
@@ -171,7 +175,22 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     @Override
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
+        logger.info(String.format("Executing command: %s", params));
         return commandProvider.executeCommand(params, languageClient);
+    }
+
+    @Override
+    public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
+        logger.info(String.format("Handling document link: %s", params));
+        docLinkProvider.setTracker(DocumentTracker.getInstance());
+        docLinkProvider.setWizard(wizard);
+        return docLinkProvider.handleDocLink(params);
+    }
+
+    @Override
+    public CompletableFuture<DocumentLink> documentLinkResolve(DocumentLink params) {
+        logger.info(String.format("Resolving document link: %s", params));
+        return docLinkResolver.resolveDocLink(params);
     }
 
     public void sendMessageToClient(MessageType type, String message) {

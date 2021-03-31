@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
@@ -64,8 +65,27 @@ public final class FileRepository {
      * @return Whether the provided file is executable.
      */
     public boolean isExecutable(Path path) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
         // It's hard to mock this behavior using Jimfs, so it is instead provided as a wrapper here.
         return path.toFile().canExecute();
+    }
+
+    /**
+     * Checks to see if a path is a file.
+     *
+     * @param path The path to check.
+     * @return Whether the provided file is a file.
+     */
+    public boolean isFile(Path path) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
+        final File file = path.toFile();
+        return file.isFile() && !file.isDirectory();
     }
 
     /**
@@ -99,8 +119,6 @@ public final class FileRepository {
      * @return The path to the file or null if the file wasn't found.
      */
     public Path searchPATH(String filename) {
-        logger.info(String.format("Searching PATH for filename: \"%s\"", filename));
-
         try {
             for (final Path dir : getPATHDirs()) {
                 final List<Path> files = Files.walk(dir)
@@ -114,15 +132,11 @@ public final class FileRepository {
                 }
 
                 // Return the first file that matches.
-                final Path path = files.get(0);
-                logger.info(String.format("Located filename in PATH: \"%s\"", path));
-                return path;
+                return files.get(0);
             }
 
-            logger.info(String.format("Unable to find filename \"%s\" in PATH.", filename));
             return null;
         } catch (IOException e) {
-            logger.error("Failed to search PATH.", e);
             return null;
         }
     }
