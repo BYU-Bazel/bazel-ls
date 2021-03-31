@@ -9,6 +9,7 @@ py_binary(
     ],
     deps = [
         "//foo/path/to/package:package",
+        "//@baz",
     ],
 )
 
