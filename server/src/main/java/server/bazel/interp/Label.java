@@ -39,10 +39,10 @@ public class Label {
      * @throws LabelSyntaxException If the string is not parsable.
      */
     public static Label parse(String value) throws LabelSyntaxException {
-        final String workspaceRegex = "(?:@([a-zA-Z0-9._-]+))";
+        final String workspaceRegex = "(?:@([^\\/:]+))";
         final String rootRegex = "(//)";
-        final String pkgRegex = "([a-zA-Z0-9._-]*(?:/[a-zA-Z0-9._-]+)*)";
-        final String targetRegex = "([a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*)";
+        final String pkgRegex = "([^\\/:]*(?:/[^\\/:]+)*)";
+        final String targetRegex = "([^\\/:]+(?:/[^\\/:]+)*)";
         final String fullRegex = String.format("^%s?(?:%s%s)?(?::?%s)?$", workspaceRegex, rootRegex,
                 pkgRegex, targetRegex);
 
