@@ -41,22 +41,26 @@ public class CommandProvider {
      */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params, LanguageClient languageClient) {
         logger.info("Executing command " + params.getCommand() + " with args " + params.getArguments());
-        switch (params.getCommand()) {
-            case AllCommands.build:
-                executeBuildCommand(params.getArguments(), languageClient);
-                break;
-            case AllCommands.test:
-                executeTestCommand(params.getArguments(), languageClient);
-                break;
-            case AllCommands.none:
-                logger.info(params.getCommand() + " was invoked, nothing should happen");
-                break;
-            case AllCommands.syncServer:
-                executeSyncServerCommand(languageClient);
-                break;
-            default:
-                logger.error("Unsupported command: " + params.getCommand());
-        }
+        languageClient.showMessage(new MessageParams(MessageType.Info,
+                    String.format("Executing command %s with args %s", params.getCommand(), params.getArguments())));
+        new Thread(() -> {
+            switch (params.getCommand()) {
+                case AllCommands.build:
+                    executeBuildCommand(params.getArguments(), languageClient);
+                    break;
+                case AllCommands.test:
+                    executeTestCommand(params.getArguments(), languageClient);
+                    break;
+                case AllCommands.none:
+                    logger.info(params.getCommand() + " was invoked, nothing should happen");
+                    break;
+                case AllCommands.syncServer:
+                    executeSyncServerCommand(languageClient);
+                    break;
+                default:
+                    logger.error("Unsupported command: " + params.getCommand());
+            }
+        }).start();
         return CompletableFuture.completedFuture(new Object());
     }
 
