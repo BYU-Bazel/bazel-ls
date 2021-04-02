@@ -9,6 +9,15 @@ py_binary(
     ],
     deps = [
         "//foo/path/to/package:package",
+        "//@baz",
     ],
+)
+
+py_test(
+    name = "test_case",
+    srcs = [
+        "//test:number_test.py",
+    ],
+    main = "//test:number_test.py",
 )
 

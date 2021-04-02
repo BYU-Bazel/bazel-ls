@@ -68,12 +68,13 @@ public class CodeLensProvider {
         for (BuildTarget target : targets) {
             if(target.getKind().contains("_binary") || target.getKind().contains("_test")) {
                 CodeLens result = new CodeLens();
-                result.setRange(findRangeForTarget(target, contents));
+                Range range = findRangeForTarget(target, contents);
+                if(range == null) continue;
+                result.setRange(range);
                 result.setCommand(findCommandForTarget(target, path));
                 results.add(result);
             }
         }
-
         return CompletableFuture.completedFuture(results);
     }
 
@@ -110,6 +111,7 @@ public class CodeLensProvider {
 
         String nameDeclaration = "name = \"" + target.getLabel() + "\"";
         int nameIndex = contents.indexOf(nameDeclaration);
+        if(nameIndex == -1) return null;
         int kindIndex = contents.substring(0, nameIndex).lastIndexOf(target.getKind());
         int kindEndIndex = kindIndex + target.getKind().length();
         int lineNumber = 0;
@@ -119,7 +121,7 @@ public class CodeLensProvider {
             }
         }
 
-        return new Range(new Position(lineNumber, kindIndex), new Position(lineNumber, kindEndIndex));
+        return new Range(new Position(lineNumber, 0), new Position(lineNumber, kindEndIndex - kindIndex));
 
     }
 
@@ -156,18 +158,23 @@ public class CodeLensProvider {
     private String buildPath(URI uri) {
         File file = new File(uri);
         StringBuilder pathBuilder = new StringBuilder();
+        boolean rootPath = true;
         while(file != null) {
             if(file.isDirectory()) {
                 if(Arrays.asList(file.list()).contains("WORKSPACE") || Arrays.asList(file.list()).contains("WORKSPACE.bzl")) {
-                    pathBuilder.insert(0, "/");
+                    if (rootPath) {
+                        pathBuilder.insert(0, "/");
+                    }
                     break;
                 }
                 else {
                     pathBuilder.insert(0, "/" + file.getName());
+                    rootPath = false;
                 }
             }
             file = new File(file.getParent());
         }
+        pathBuilder.insert(0, "/");
         return pathBuilder.toString();
     }
 }
