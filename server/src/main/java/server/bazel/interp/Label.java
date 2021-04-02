@@ -1,6 +1,8 @@
 package server.bazel.interp;
 
 import com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import server.utils.Nullability;
 
 import java.nio.file.Path;
@@ -13,6 +15,8 @@ import java.util.regex.Pattern;
  * Represents a Bazel target label. E.g. `@maven//some/other:package_name`.
  */
 public class Label {
+    private static final Logger logger = LogManager.getLogger(Label.class);
+
     private final String workspace;
     private final String pkg;
     private final String target;
@@ -94,6 +98,8 @@ public class Label {
         Preconditions.checkNotNull(input.getLocalDeclaringFilePath());
         Preconditions.checkNotNull(input.getFileRepository());
 
+        // TODO: Fix issues
+
         final LabelResolveOutput output = new LabelResolveOutput();
 
         // Only local workspaces are supported at the moment.
@@ -129,8 +135,8 @@ public class Label {
 
         // Resolve the full path.
         {
-            Path resolved = workspacePath.resolve(pkgPath).resolve(targetPath);
-            resolved = input.getFileRepository().getFileSystem().getPath(resolved.toString());
+            final String unresolved = String.format("%s/%s/%s", workspacePath, pkgPath, targetPath);
+            final Path resolved = Paths.get(unresolved).normalize().toAbsolutePath();
             if (input.getFileRepository().isFile(resolved)) {
                 output.setPath(resolved);
                 return output;
@@ -139,7 +145,9 @@ public class Label {
 
         // Resolve the path as an inferred build file.
         {
-            final Path resolved = workspacePath.resolve(pkgPath);
+            final String unresolved = String.format("%s/%s", workspacePath, pkgPath);
+            final Path resolved = Paths.get(unresolved).normalize().toAbsolutePath();
+
             final Path buildResolved = resolved.resolve(Paths.get("BUILD")).toAbsolutePath();
             final Path buildBazelResolved = resolved.resolve(Paths.get("BUILD.bazel")).toAbsolutePath();
 

@@ -41,8 +41,16 @@ public class CommandProvider {
      */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params, LanguageClient languageClient) {
         logger.info("Executing command " + params.getCommand() + " with args " + params.getArguments());
-        languageClient.showMessage(new MessageParams(MessageType.Info,
+
+        // Optionally show command popups.
+        if (Nullability.nullableOr(
+                false,
+                () -> Workspace.getInstance().getExtensionConfig().getBazel().showCommandPopups()
+        )) {
+            languageClient.showMessage(new MessageParams(MessageType.Info,
                     String.format("Executing command %s with args %s", params.getCommand(), params.getArguments())));
+        }
+
         new Thread(() -> {
             switch (params.getCommand()) {
                 case AllCommands.build:
@@ -105,9 +113,9 @@ public class CommandProvider {
             MessageParams msg = new MessageParams();
             msg.setType(MessageType.Warning);
             msg.setMessage(String.format(
-                "Unable to sync the server because issues were found in the codebase... Try fixing " +
-                "all syntax errors and ensuring that all targets are valid. Bazel error output:\n\n%s", 
-                e.getMessage()
+                    "Unable to sync the server because issues were found in the codebase... Try fixing " +
+                            "all syntax errors and ensuring that all targets are valid. Bazel error output:\n\n%s",
+                    e.getMessage()
             ));
             languageClient.showMessage(msg);
         }

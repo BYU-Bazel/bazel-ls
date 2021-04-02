@@ -128,7 +128,7 @@ public class DocLinkProvider {
         } catch (LabelSyntaxException e) {
             return null;
         } catch (LabelNotFoundException e) {
-            logger.info("Label " + expr.toString() + " could not be converted to a link " +
+            logger.info("Label " + expr.toString() + " could not be converted to a link because " +
                     "the target doesn't exist.");
             return null;
         }
