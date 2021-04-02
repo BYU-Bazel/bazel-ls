@@ -221,7 +221,8 @@
                     "BUILD",
                     "BUILD.bazel",
                     "WORKSPACE",
-                    "WORKSPACE.bazel"
+                    "WORKSPACE.bazel",
+                    "BUILD.tools"
                 ],
                 "configuration": "./syntaxes/starlark.configuration.json"
             }
