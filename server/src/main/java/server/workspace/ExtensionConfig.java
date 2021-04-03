@@ -27,11 +27,15 @@ public class ExtensionConfig {
         private Buildifier buildifier;
         private Java java;
         private SyncMode syncMode;
+        private boolean useCodelense;
+        private boolean showCommandPopups;
 
         public Bazel() {
             buildifier = null;
             java = null;
             syncMode = null;
+            useCodelense = false;
+            showCommandPopups = false;
         }
 
         public Buildifier getBuildifier() {
@@ -56,6 +60,22 @@ public class ExtensionConfig {
 
         public void setSyncMode(SyncMode syncMode) {
             this.syncMode = syncMode;
+        }
+
+        public boolean useCodelense() {
+            return useCodelense;
+        }
+
+        public void setUseCodelense(boolean useCodelense) {
+            this.useCodelense = useCodelense;
+        }
+
+        public boolean showCommandPopups() {
+            return showCommandPopups;
+        }
+
+        public void setShowCommandPopups(boolean showCommandPopups) {
+            this.showCommandPopups = showCommandPopups;
         }
     }
 

@@ -21,6 +21,7 @@ import server.doclink.DocLinkProvider;
 import server.doclink.DocLinkResolver;
 import server.formatting.FormattingProvider;
 import server.utils.DocumentTracker;
+import server.utils.Nullability;
 import server.utils.StarlarkWizard;
 import server.workspace.ExtensionConfig;
 import server.workspace.ProjectFolder;
@@ -161,6 +162,13 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     @Override
     public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
+        if (!Nullability.nullableOr(
+                false,
+                () -> Workspace.getInstance().getExtensionConfig().getBazel().useCodelense()
+        )) {
+            return CompletableFuture.completedFuture(new ArrayList<>());
+        }
+
         logger.info("CodeLens request received");
         CodeLensProvider codeLensProvider = new CodeLensProvider(DocumentTracker.getInstance());
         return codeLensProvider.getCodeLens(params);
@@ -168,6 +176,13 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     @Override
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
+        if (!Nullability.nullableOr(
+                false,
+                () -> Workspace.getInstance().getExtensionConfig().getBazel().useCodelense()
+        )) {
+            return CompletableFuture.completedFuture(unresolved);
+        }
+
         logger.info("CodeLens resolve request received");
         CodeLensResolver codeLensResolver = new CodeLensResolver();
         return codeLensResolver.resolveCodeLens(unresolved);
