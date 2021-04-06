@@ -123,6 +123,16 @@
                         "Server syncing will only be triggered when calling the bazel.syncServer command."
                     ]
                 },
+                "bazel.useCodelense": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to use codelens."
+                },
+                "bazel.showCommandPopups": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to show command popups as commands run on the server."
+                },
                 "bazel.buildifier.executable": {
                     "type": "string",
                     "default": "",
@@ -221,7 +231,8 @@
                     "BUILD",
                     "BUILD.bazel",
                     "WORKSPACE",
-                    "WORKSPACE.bazel"
+                    "WORKSPACE.bazel",
+                    "BUILD.tools"
                 ],
                 "configuration": "./syntaxes/starlark.configuration.json"
             }

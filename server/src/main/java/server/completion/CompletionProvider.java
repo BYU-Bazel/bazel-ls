@@ -70,7 +70,7 @@ public class CompletionProvider {
 
         } catch (Exception e) {
             logger.error(Logging.stackTraceToString(e));
-        }// TODO: Find the cause of the completion null pointer exception and error check accordingly
+        }
 
         return CompletableFuture.completedFuture(Either.forRight(new CompletionList(completionItems)));
 
@@ -116,17 +116,21 @@ public class CompletionProvider {
         return temp.toString();
     }
 
-    private void getPathItems(String line, CompletionParams completionParams, List<CompletionItem> completionItems) throws WorkspaceAPIException {
+    private void getPathItems(String line, CompletionParams completionParams, List<CompletionItem> completionItems) {
         String newPath = getPath(line, completionParams.getPosition());
-        WorkspaceAPI workspaceAPI = getWorkspaceAPI();
-        List<Path> paths = workspaceAPI.findPossibleCompletionsForPath(Paths.get(newPath));
-        paths.parallelStream().forEach(item -> {
-            CompletionItem completionItem = new CompletionItem(item.toString());
-            completionItem.setKind(CompletionItemKind.Folder);
-            completionItem.setInsertText(item.toString());
-            completionItem.setTextEdit(new TextEdit(new Range(completionParams.getPosition(), new Position(completionParams.getPosition().getLine(), completionParams.getPosition().getCharacter())), item.toString()));
-            completionItems.add(completionItem);
-        });
+        try {
+            WorkspaceAPI workspaceAPI = getWorkspaceAPI();
+            List<Path> paths = workspaceAPI.findPossibleCompletionsForPath(Paths.get(newPath));
+            paths.parallelStream().forEach(item -> {
+                CompletionItem completionItem = new CompletionItem(item.toString());
+                completionItem.setKind(CompletionItemKind.Folder);
+                completionItem.setInsertText(item.toString());
+                completionItem.setTextEdit(new TextEdit(new Range(completionParams.getPosition(), new Position(completionParams.getPosition().getLine(), completionParams.getPosition().getCharacter())), item.toString()));
+                completionItems.add(completionItem);
+            });
+        } catch (WorkspaceAPIException e) {
+            logger.warn("Could not get path items.");
+        }
         getSourceFiles(newPath.substring(2), completionItems, completionParams);
     }
 
@@ -166,8 +170,10 @@ public class CompletionProvider {
         logger.info("File: {}", file.toString());
         logger.info("Completion Items: {}", completionItems.toString());
         for(CompletionItem item : completionItems) {
-            if(item.getLabel().equals(file.getName())) {
-                return true;
+            if(item != null) {
+                if (item.getLabel().equals(file.getName())) {
+                    return true;
+                }
             }
         }
         return false;

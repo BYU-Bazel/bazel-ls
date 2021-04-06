@@ -50,7 +50,7 @@ public class FormattingProvider {
             formatInput.setType(BuildifierFileType.BUILD);
         } else if (name.equals("WORKSPACE")) {
             formatInput.setType(BuildifierFileType.WORKSPACE);
-        } else if (name.substring(name.length() - 4, name.length()).equals(".bzl")) {
+        } else if (name.substring(name.length() - 4, name.length()).equals(".bzl") || name.substring(name.length() - 6, name.length()).equals(".bazel")) {
             formatInput.setType(BuildifierFileType.BZL);
         } else {
             logger.info("Could not format this type of file: " + name);
