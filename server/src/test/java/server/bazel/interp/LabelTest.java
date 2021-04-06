@@ -27,6 +27,17 @@ public class LabelTest {
     }
 
     @Test
+    public void test_parse_withWeirdCrazySymbols() throws LabelSyntaxException {
+        String value = "@som@thing//@a@%$/%$!@@/path/to:@som@5Teg*))";
+        Label l = Label.parse(value);
+
+        Assert.assertEquals("som@thing", l.workspace());
+        Assert.assertEquals("@a@%$/%$!@@/path/to", l.pkg());
+        Assert.assertEquals("@som@5Teg*))", l.target());
+        Assert.assertFalse(l.isLocal());
+    }
+
+    @Test
     public void test_parse_localDependency() throws LabelSyntaxException {
         String value = ":something";
         Label l = Label.parse(value);
@@ -89,8 +100,8 @@ public class LabelTest {
         String value = "@repo//path/to:my/src/file.cc";
         Label l = Label.parse(value);
 
-        Assert.assertEquals(l.workspace(), "repo");
-        Assert.assertEquals(l.pkg(), "path/to");
+        Assert.assertEquals("repo", l.workspace());
+        Assert.assertEquals("path/to", l.pkg());
         Assert.assertEquals("my/src/file.cc", l.target());
     }
 

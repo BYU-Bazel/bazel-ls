@@ -48,6 +48,7 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
         serverCapabilities.setDocumentFormattingProvider(true);
         serverCapabilities.setCodeLensProvider(new CodeLensOptions(true));
         serverCapabilities.setExecuteCommandProvider(new ExecuteCommandOptions(AllCommands.allCommands()));
+        serverCapabilities.setDocumentLinkProvider(new DocumentLinkOptions(true));
 
         logger.info(String.format("Declared server capabilities: \"%s\"", serverCapabilities));
 

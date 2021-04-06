@@ -3,18 +3,12 @@ load("@rules_java//java:defs.bzl", "java_library")
 package(default_visibility = ["//visibility:public"])
 
 java_library(
-    name = "utils",
-    srcs = [
-        "Callbacks.java",
-        "DocumentTracker.java",
-        "FileRepository.java",
-        "Logging.java",
-        "Nullability.java",
-        "Observatory.java",
-        "Positions.java",
-        "StarlarkWizard.java",
-    ],
+    name = "doclink",
+    srcs = glob(["**/*.java"]),
     deps = [
+        "//server/src/main/java/server/utils",
+        "//server/src/main/java/server/bazel/interp",
+        "//server/src/main/java/server/workspace",
         "//third_party/java:guava",
         "//third_party/java:log4j",
         "//third_party/java:lsp4j",
