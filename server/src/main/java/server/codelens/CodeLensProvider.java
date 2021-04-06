@@ -113,6 +113,10 @@ public class CodeLensProvider {
         int nameIndex = contents.indexOf(nameDeclaration);
         if(nameIndex == -1) return null;
         int kindIndex = contents.substring(0, nameIndex).lastIndexOf(target.getKind());
+        if (kindIndex < 0) {
+            String altIndicator = target.getKind().substring(target.getKind().lastIndexOf("_"), target.getKind().length());
+            kindIndex = contents.substring(0, nameIndex).lastIndexOf(altIndicator);
+        }
         int kindEndIndex = kindIndex + target.getKind().length();
         int lineNumber = 0;
         for (int i = 0; i < kindIndex; i++) {
