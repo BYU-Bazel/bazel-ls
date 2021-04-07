@@ -7,7 +7,8 @@
 
 From there, give the generated VSIX file to Jared, he'll know what to do.
 
-# Installing the Extension
+##  Installing the Extension
+
 To install the extension, click the extensions icon in VSCode.
 
 Then, click the three dots at the top of the extensions window and select ```Install from VSIX```.
