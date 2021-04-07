@@ -6,6 +6,7 @@ import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.services.*;
 import server.commands.AllCommands;
+import server.completion.TriggerCharacters;
 import server.workspace.ProjectFolder;
 import server.workspace.Workspace;
 import server.bazel.cli.BazelServerException;
@@ -44,7 +45,7 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
         ServerCapabilities serverCapabilities = new ServerCapabilities();
 
         serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
-        serverCapabilities.setCompletionProvider(new CompletionOptions(true, Arrays.asList(":", "/", "\"")));
+        serverCapabilities.setCompletionProvider(new CompletionOptions(true, TriggerCharacters.all()));
         serverCapabilities.setDocumentFormattingProvider(true);
         serverCapabilities.setCodeLensProvider(new CodeLensOptions(true));
         serverCapabilities.setExecuteCommandProvider(new ExecuteCommandOptions(AllCommands.allCommands()));

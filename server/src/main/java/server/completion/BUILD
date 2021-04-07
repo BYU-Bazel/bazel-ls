@@ -4,9 +4,7 @@ package(default_visibility = ["//visibility:public"])
 
 java_library(
     name = "completion",
-    srcs = [
-        "CompletionProvider.java",
-    ],
+    srcs = glob(["**/*.java"]),
     deps = [
         "//server/src/main/java/server/bazel/bazelWorkspaceAPI",
         "//server/src/main/java/server/bazel/tree",
@@ -15,5 +13,6 @@ java_library(
         "//third_party/java:guava",
         "//third_party/java:log4j",
         "//third_party/java:lsp4j",
+        "//third_party/java:starlark",
     ],
 )

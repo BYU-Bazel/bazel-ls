@@ -89,6 +89,31 @@ public final class FileRepository {
     }
 
     /**
+     * Checks to see if a path is a directory.
+     *
+     * @param path The path to check.
+     * @return Whether the provided file is a directory.
+     */
+    public boolean isDir(Path path) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
+        final File file = path.toFile();
+        return !file.isFile() && file.isDirectory();
+    }
+
+    /**
+     * Checks to see if a path exists.
+     *
+     * @param path The path to check.
+     * @return Whether the provided file exists.
+     */
+    public boolean exists(Path path) {
+        return Files.exists(path, LinkOption.NOFOLLOW_LINKS);
+    }
+
+    /**
      * Checks to see if a file is readable.
      *
      * @param path The path to check.

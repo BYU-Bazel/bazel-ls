@@ -15,6 +15,7 @@ import server.codelens.CodeLensProvider;
 import server.codelens.CodeLensResolver;
 import server.commands.CommandProvider;
 import server.completion.CompletionProvider;
+import server.completion.CompletionResolver;
 import server.diagnostics.DiagnosticParams;
 import server.diagnostics.DiagnosticsProvider;
 import server.doclink.DocLinkProvider;
@@ -43,6 +44,8 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     private CommandProvider commandProvider;
     private DocLinkProvider docLinkProvider;
     private DocLinkResolver docLinkResolver;
+    private CompletionProvider completionProvider;
+    private CompletionResolver completionResolver;
 
     public BazelServices() {
         wizard = new StarlarkWizard();
@@ -51,6 +54,8 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
         commandProvider = new CommandProvider();
         docLinkProvider = new DocLinkProvider();
         docLinkResolver = new DocLinkResolver();
+        completionProvider = new CompletionProvider();
+        completionResolver = new CompletionResolver();
     }
 
     @Override
@@ -136,16 +141,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     }
 
     @Override
-    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams completionParams) {
-        return new CompletionProvider().getCompletion(completionParams);
-    }
-
-    @Override
-    public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
-        return CompletableFuture.completedFuture(unresolved);
-    }
-
-    @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         logger.info("Formatting request received");
         Buildifier buildifier = new Buildifier();
@@ -210,5 +205,17 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     public void sendMessageToClient(MessageType type, String message) {
         languageClient.showMessage(new MessageParams(type, message));
+    }
+
+    @Override
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams completionParams) {
+        completionProvider.setTracker(DocumentTracker.getInstance());
+        completionProvider.setWizard(wizard);
+        return completionProvider.provide(completionParams);
+    }
+
+    @Override
+    public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
+        return completionResolver.resolve(unresolved);
     }
 }
