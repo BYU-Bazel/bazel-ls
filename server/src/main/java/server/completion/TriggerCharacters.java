@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TriggerCharacters {
+    public static final String AT = "@";
     public static final String COLON = ":";
     public static final String SINGLE_SLASH = "/";
     public static final String DOUBLE_SLASH = "//";

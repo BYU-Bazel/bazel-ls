@@ -21,9 +21,7 @@ import server.diagnostics.DiagnosticsProvider;
 import server.doclink.DocLinkProvider;
 import server.doclink.DocLinkResolver;
 import server.formatting.FormattingProvider;
-import server.utils.DocumentTracker;
-import server.utils.Nullability;
-import server.utils.StarlarkWizard;
+import server.utils.*;
 import server.workspace.ExtensionConfig;
 import server.workspace.ProjectFolder;
 import server.workspace.Workspace;
@@ -209,9 +207,16 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
 
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams completionParams) {
-        completionProvider.setTracker(DocumentTracker.getInstance());
-        completionProvider.setWizard(wizard);
-        return completionProvider.provide(completionParams);
+        try {
+            completionProvider.setTracker(DocumentTracker.getInstance());
+            completionProvider.setWizard(wizard);
+            completionProvider.setFileRepo(FileRepository.getDefault());
+            return completionProvider.provide(completionParams);
+        } catch (Exception e) {
+            // Just in case :)
+            logger.error(Logging.stackTraceToString(e));
+            return completionProvider.empty();
+        }
     }
 
     @Override

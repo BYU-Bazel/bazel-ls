@@ -1,17 +1,11 @@
 package server.completion;
 
-import com.google.common.collect.ImmutableList;
 import net.starlark.java.syntax.ParserInput;
 import net.starlark.java.syntax.StarlarkFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import server.bazel.bazelWorkspaceAPI.WorkspaceAPI;
-import server.bazel.bazelWorkspaceAPI.WorkspaceAPIException;
-import server.bazel.tree.BuildTarget;
-import server.bazel.tree.SourceFile;
-import server.bazel.tree.WorkspaceTree;
 import server.utils.*;
 import server.workspace.Workspace;
 
@@ -61,48 +55,52 @@ public class CompletionProvider {
         this.fileRepo = fileRepo;
     }
 
-    private FileRepository fileRepo() {
-        return fileRepo != null ? fileRepo : FileRepository.getDefault();
+    private FileRepository effectiveFileRepo() {
+        return getFileRepo() != null ? getFileRepo() : FileRepository.getDefault();
     }
 
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> provide(CompletionParams params) {
-        final WorkspaceAPI api;
-        {
-            final WorkspaceTree tree = Workspace.getInstance().getWorkspaceTree();
-            api = new WorkspaceAPI(tree);
-        }
+        final List<CompletionItem> completions = new ArrayList<>();
 
+        // The absolute path to this WORKSPACE.
         final Path absWorkspacePath;
         {
             absWorkspacePath = Workspace.getInstance().getRootFolder().getPath().toAbsolutePath();
         }
 
+        // The absolute path to the currently opened document.
         final Path absDocumentPath;
         {
             final URI fileURI = URI.create(params.getTextDocument().getUri());
             absDocumentPath = Paths.get(fileURI).toAbsolutePath();
         }
 
+        // The path to the directory that contains the BUILD file.
         final Path absPackagePath;
         {
             absPackagePath = absDocumentPath.getParent();
         }
 
-        final List<CompletionItem> completions = new ArrayList<>();
-
+        // Don't allow autocompletions for anything other than BUILD files.
         if (!absDocumentPath.toString().endsWith("BUILD") && !absDocumentPath.toString().endsWith("BUILD.bazel")) {
             return completed(completions);
         }
 
-        final String currentLine;
+        // Get the current file contents.
+        final String currentFileContent;
         {
             final URI uri = URI.create(params.getTextDocument().getUri());
-            final String content = getTracker().getContents(uri);
-            final List<String> lines = Arrays.asList(content.split("\n"));
-            currentLine = lines.get(params.getPosition().getLine());
-            logger.info("Current line: " + currentLine);
+            currentFileContent = getTracker().getContents(uri);
         }
 
+        // Get the current line being edited.
+        final String currentLine;
+        {
+            final List<String> lines = Arrays.asList(currentFileContent.split("\n"));
+            currentLine = lines.get(params.getPosition().getLine());
+        }
+
+        // Infer whether autocompletion should occur.
         boolean shouldAutocomplete = false;
         String toAutocomplete = null;
         {
@@ -125,58 +123,71 @@ public class CompletionProvider {
                     break;
                 }
             }
+
+            // Try to infer if this completion should take place based on the starlark file.
+            StarlarkFile file = getStarlarkFile(currentFileContent, absDocumentPath);
+            if (file == null || !getWizard().anyCallsContainPos(file, params.getPosition())) {
+                toAutocomplete = null;
+                shouldAutocomplete = false;
+            }
         }
 
+        // Don't provide completions unless necessary/possible.
         {
             if (!shouldAutocomplete) {
                 return completed(completions);
             }
 
-            if (toAutocomplete.startsWith("@")) {
+            if (toAutocomplete.startsWith(TriggerCharacters.AT)) {
                 return completed(completions);
             }
         }
 
+        // Get the effective path of the directory to provide completions for. The varies
+        // based on the trigger character.
         final Path rollingPath;
         boolean completeBuildTargets = false;
-        if (toAutocomplete.startsWith(TriggerCharacters.DOUBLE_SLASH)) {
-            final int pkgStartIdx = TriggerCharacters.DOUBLE_SLASH.length();
+        {
+            if (toAutocomplete.startsWith(TriggerCharacters.DOUBLE_SLASH)) {
+                final int pkgStartIdx = TriggerCharacters.DOUBLE_SLASH.length();
 
-            if (toAutocomplete.contains(TriggerCharacters.COLON)) {
-                final int pkgEndIdx = toAutocomplete.indexOf(TriggerCharacters.COLON);
-                final String pkgPath = toAutocomplete.substring(pkgStartIdx, pkgEndIdx);
+                if (toAutocomplete.contains(TriggerCharacters.COLON)) {
+                    final int pkgEndIdx = toAutocomplete.indexOf(TriggerCharacters.COLON);
+                    final String pkgPath = toAutocomplete.substring(pkgStartIdx, pkgEndIdx);
 
-                final int localStartIdx = pkgEndIdx + 1;
+                    final int localStartIdx = pkgEndIdx + 1;
+                    final String localPath = toAutocomplete.substring(localStartIdx);
+
+                    completeBuildTargets = !localPath.contains(TriggerCharacters.SINGLE_SLASH);
+                    rollingPath = joinPaths(absWorkspacePath.toString(), pkgPath, localPath);
+                } else {
+                    final String pkgPath = toAutocomplete.substring(pkgStartIdx);
+                    rollingPath = joinPaths(absWorkspacePath.toString(), pkgPath);
+                }
+            } else if (toAutocomplete.startsWith(TriggerCharacters.COLON)) {
+                final int localStartIdx = toAutocomplete.indexOf(TriggerCharacters.COLON) + 1;
                 final String localPath = toAutocomplete.substring(localStartIdx);
 
                 completeBuildTargets = !localPath.contains(TriggerCharacters.SINGLE_SLASH);
-                rollingPath = joinPaths(absWorkspacePath.toString(), pkgPath, localPath);
+                rollingPath = joinPaths(absPackagePath.toString(), localPath);
             } else {
-                final String pkgPath = toAutocomplete.substring(pkgStartIdx);
-                rollingPath = joinPaths(absWorkspacePath.toString(), pkgPath);
+                rollingPath = joinPaths(absPackagePath.toString(), toAutocomplete);
             }
-        } else if (toAutocomplete.startsWith(TriggerCharacters.COLON)) {
-            final int localStartIdx = toAutocomplete.indexOf(TriggerCharacters.COLON) + 1;
-            final String localPath = toAutocomplete.substring(localStartIdx);
-
-            completeBuildTargets = !localPath.contains(TriggerCharacters.SINGLE_SLASH);
-            rollingPath = joinPaths(absWorkspacePath.toString(), localPath);
-        } else {
-            rollingPath = joinPaths(absWorkspacePath.toString(), toAutocomplete);
         }
 
+        // Verify that the path exists and that the path isn't a file (marking the
+        // end of a completion).
         {
-            if (!fileRepo().exists(rollingPath)) {
-                logger.info(rollingPath + " doesnt exist");
+            if (!effectiveFileRepo().exists(rollingPath)) {
                 return completed(completions);
             }
 
-            if (fileRepo().isFile(rollingPath)) {
-                logger.info(rollingPath + " is a file");
+            if (effectiveFileRepo().isFile(rollingPath)) {
                 return completed(completions);
             }
         }
 
+        // Append all directories and files of a folder.
         {
             File directory = new File(rollingPath.toString());
             String[] children = Nullability.nullableOr(new String[]{}, directory::list);
@@ -186,7 +197,7 @@ public class CompletionProvider {
                 item.setLabel(child);
 
                 Path childPath = joinPaths(rollingPath.toString(), child);
-                if (fileRepo().isDir(childPath)) {
+                if (effectiveFileRepo().isDir(childPath)) {
                     item.setKind(CompletionItemKind.Folder);
                 } else {
                     item.setKind(CompletionItemKind.File);
@@ -196,18 +207,11 @@ public class CompletionProvider {
             }
         }
 
+        // Append all inferred target names.
         final Path buildFile = getBuildFile(rollingPath);
         if (completeBuildTargets && buildFile != null) {
-            StarlarkFile file = null;
-            try {
-                final String content = tracker.getContents(buildFile.toUri());
-                final ParserInput input = ParserInput.fromString(content, buildFile.toUri().toString());
-                file = StarlarkFile.parse(input);
-            } catch (Error | RuntimeException e) {
-                logger.error("Parsing failed for an unknown reason!");
-                logger.error(Logging.stackTraceToString(e));
-            }
-
+            final String content = tracker.getContents(buildFile.toUri());
+            final StarlarkFile file = getStarlarkFile(content, buildFile);
             if (file != null) {
                 for (StarlarkWizard.TargetMeta meta : getWizard().locateTargets(file)) {
                     final CompletionItem item = new CompletionItem();
@@ -221,15 +225,28 @@ public class CompletionProvider {
         return completed(completions);
     }
 
+    private StarlarkFile getStarlarkFile(String content, Path path) {
+        StarlarkFile file = null;
+        try {
+            final ParserInput input = ParserInput.fromString(content, path.toUri().toString());
+            file = StarlarkFile.parse(input);
+        } catch (Error | RuntimeException e) {
+            logger.error("Parsing failed for an unknown reason!");
+            logger.error(Logging.stackTraceToString(e));
+        }
+
+        return file;
+    }
+
     private Path getBuildFile(Path pkgPath) {
         final Path buildBazelFile = joinPaths(pkgPath.toString(), "BUILD.bazel");
         final Path buildFile = joinPaths(pkgPath.toString(), "BUILD");
 
-        if (fileRepo().exists(buildBazelFile)) {
+        if (effectiveFileRepo().exists(buildBazelFile)) {
             return buildBazelFile;
         }
 
-        if (fileRepo().exists(buildFile)) {
+        if (effectiveFileRepo().exists(buildFile)) {
             return buildFile;
         }
 
@@ -250,5 +267,9 @@ public class CompletionProvider {
     private CompletableFuture<Either<List<CompletionItem>, CompletionList>> completed(List<CompletionItem> items) {
         final Either<List<CompletionItem>, CompletionList> either = Either.forLeft(items);
         return CompletableFuture.completedFuture(either);
+    }
+
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> empty() {
+        return completed(new ArrayList<>());
     }
 }
