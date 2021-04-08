@@ -111,7 +111,7 @@ public class DiagnosticsProvider {
                     final LabelResolveInput input = new LabelResolveInput();
                     input.setFileRepository(FileRepository.getDefault());
                     input.setLocalWorkspacePath(Workspace.getInstance().getRootFolder().getPath());
-                    input.setLocalDeclaringFilePath(textDocPath.getParent());
+                    input.setLocalDeclaringFilePath(textDocPath);
 
                     final LabelResolveOutput output = label.resolve(input);
                     targetPkg = output.getPath();

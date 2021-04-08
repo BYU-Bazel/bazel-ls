@@ -2,7 +2,7 @@
     "name": "vscode-byubazel",
     "displayName": "Bazel",
     "description": "Bazel BUILD integration",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "publisher": "BazelBuild",
     "license": "Apache-2.0",
     "repository": {
