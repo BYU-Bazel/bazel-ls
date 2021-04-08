@@ -58,24 +58,24 @@ public class CommandProvider {
                     String.format("Executing command %s with args %s", params.getCommand(), params.getArguments())));
         }
 
-        new Thread(() -> {
-            switch (params.getCommand()) {
-                case AllCommands.build:
-                    executeBuildCommand(params.getArguments(), languageClient);
-                    break;
-                case AllCommands.test:
-                    executeTestCommand(params.getArguments(), languageClient);
-                    break;
-                case AllCommands.none:
-                    logger.info(params.getCommand() + " was invoked, nothing should happen");
-                    break;
-                case AllCommands.syncServer:
-                    executeSyncServerCommand();
-                    break;
-                default:
-                    logger.error("Unsupported command: " + params.getCommand());
-            }
-        }).start();
+
+        switch (params.getCommand()) {
+            case AllCommands.build:
+                executeBuildCommand(params.getArguments(), languageClient);
+                break;
+            case AllCommands.test:
+                executeTestCommand(params.getArguments(), languageClient);
+                break;
+            case AllCommands.none:
+                logger.info(params.getCommand() + " was invoked, nothing should happen");
+                break;
+            case AllCommands.syncServer:
+                executeSyncServerCommand();
+                break;
+            default:
+                logger.error("Unsupported command: " + params.getCommand());
+        }
+
         return CompletableFuture.completedFuture(new Object());
     }
 
@@ -93,19 +93,21 @@ public class CommandProvider {
      * @param languageClient an interface with which to return output and feedback to the client
      */
     private void executeBuildCommand(List<Object> args, LanguageClient languageClient) {
-        String pathString = args.get(0).toString();
-        logger.info("path to be built: " + pathString);
-        CommandToRun command = new CommandToRun("build", pathString);
-        try {
-            logger.info("Executing command...");
-            final CommandOutput output = runCommand(command);
-            languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
-            languageClient.showMessage(new MessageParams(MessageType.Info, "Executed target. See language server output console for more detail."));
-            logger.info("Command successfully executed");
-        } catch (CommandsException e) {
-            logger.error("An error occured while trying to execute the command: bazel build " + pathString);
-            languageClient.showMessage(new MessageParams(MessageType.Error, "An unexpected error occured."));
-        }
+        new Thread(() -> {
+            String pathString = args.get(0).toString();
+            logger.info("path to be built: " + pathString);
+            CommandToRun command = new CommandToRun("build", pathString);
+            try {
+                logger.info("Executing command...");
+                final CommandOutput output = runCommand(command);
+                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
+                languageClient.showMessage(new MessageParams(MessageType.Info, "Executed target. See language server output console for more detail."));
+                logger.info("Command successfully executed");
+            } catch (CommandsException e) {
+                logger.error("An error occured while trying to execute the command: bazel build " + pathString);
+                languageClient.showMessage(new MessageParams(MessageType.Error, "An unexpected error occured."));
+            }
+        }).start();
     }
 
     /**
@@ -115,19 +117,21 @@ public class CommandProvider {
      * @param languageClient an interface with which to return output and feedback to the client
      */
     private void executeTestCommand(List<Object> args, LanguageClient languageClient) {
-        String pathString = args.get(0).toString();
-        logger.info("path to be built: " + pathString);
-        CommandToRun command = new CommandToRun("test", pathString);
-        try {
-            logger.info("Executing command...");
-            final CommandOutput output = runCommand(command);
-            languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
-            languageClient.showMessage(new MessageParams(MessageType.Info, "Executed target. See language server output console for more detail."));
-            logger.info("Command successfully executed");
-        } catch (CommandsException e) {
-            logger.error("An error occured while trying to execute the command: bazel test " + pathString);
-            languageClient.showMessage(new MessageParams(MessageType.Error, "An unexpected error occured."));
-        }
+        new Thread(() -> {
+            String pathString = args.get(0).toString();
+            logger.info("path to be built: " + pathString);
+            CommandToRun command = new CommandToRun("test", pathString);
+            try {
+                logger.info("Executing command...");
+                final CommandOutput output = runCommand(command);
+                languageClient.logMessage(new MessageParams(MessageType.Info, output.getRawErrorOutput()));
+                languageClient.showMessage(new MessageParams(MessageType.Info, "Executed target. See language server output console for more detail."));
+                logger.info("Command successfully executed");
+            } catch (CommandsException e) {
+                logger.error("An error occured while trying to execute the command: bazel test " + pathString);
+                languageClient.showMessage(new MessageParams(MessageType.Error, "An unexpected error occured."));
+            }
+        }).start();
     }
 
     /**

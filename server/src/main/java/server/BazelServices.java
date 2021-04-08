@@ -187,6 +187,7 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
         logger.info(String.format("Executing command: %s", params));
+        commandProvider.setWizard(wizard);
         return commandProvider.executeCommand(params, languageClient);
     }
 

@@ -10,7 +10,6 @@ import server.buildifier.BuildifierTest;
 import server.utils.DocumentTrackerTest;
 import server.formatting.FormattingProviderTest;
 import server.utils.NullabilityTest;
-import server.workspace.WorkspaceTest;
 import server.bazel.bazelWorkspaceAPI.*;
 
 // [TODO] 
@@ -23,7 +22,6 @@ import server.bazel.bazelWorkspaceAPI.*;
         FormattingProviderTest.class,
         NullabilityTest.class,
         BazelTest.class,
-        WorkspaceTest.class,
         APITests.class,
         LabelTest.class
 })
