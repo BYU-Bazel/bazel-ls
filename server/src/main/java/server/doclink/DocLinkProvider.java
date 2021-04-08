@@ -3,18 +3,13 @@ package server.doclink;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import net.starlark.java.syntax.Expression;
-import net.starlark.java.syntax.ParserInput;
-import net.starlark.java.syntax.StarlarkFile;
 import net.starlark.java.syntax.StringLiteral;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.DocumentLinkParams;
 import server.bazel.interp.*;
-import server.utils.DocumentTracker;
-import server.utils.FileRepository;
-import server.utils.Logging;
-import server.utils.StarlarkWizard;
+import server.utils.*;
 import server.workspace.Workspace;
 
 import java.net.URI;
@@ -61,19 +56,9 @@ public class DocLinkProvider {
         // Keep references for context when running this provider.
         currentDocPath = filePath;
 
-        // Parse the starlark file.
-        final StarlarkFile file;
-        try {
-            final ParserInput input = ParserInput.fromString(content, params.getTextDocument().getUri());
-            file = StarlarkFile.parse(input);
-        } catch (Error | RuntimeException e) {
-            logger.error("Parsing failed for an unknown reason!");
-            logger.error(Logging.stackTraceToString(e));
-            return CompletableFuture.completedFuture(result);
-        }
-
         // Locate all linkable content and create document links.
-        final ImmutableList<StarlarkWizard.TargetMeta> targets = getWizard().locateTargets(file);
+        final URI uri = URI.create(params.getTextDocument().getUri());
+        final ImmutableList<StarlarkWizard.TargetMeta> targets = getWizard().allDeclaredTargets(uri);
         for (final StarlarkWizard.TargetMeta target : targets) {
             result.addAll(convertLabelExprs2DocLinks(target.srcs()));
             result.addAll(convertLabelExprs2DocLinks(target.deps()));

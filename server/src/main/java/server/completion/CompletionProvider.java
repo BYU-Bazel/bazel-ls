@@ -1,7 +1,6 @@
 package server.completion;
 
-import net.starlark.java.syntax.ParserInput;
-import net.starlark.java.syntax.StarlarkFile;
+import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.*;
@@ -125,8 +124,7 @@ public class CompletionProvider {
             }
 
             // Try to infer if this completion should take place based on the starlark file.
-            StarlarkFile file = getStarlarkFile(currentFileContent, absDocumentPath);
-            if (file == null || !getWizard().anyCallsContainPos(file, params.getPosition())) {
+            if (!getWizard().anyCallsContainPos(absDocumentPath.toUri(), params.getPosition())) {
                 toAutocomplete = null;
                 shouldAutocomplete = false;
             }
@@ -210,32 +208,17 @@ public class CompletionProvider {
         // Append all inferred target names.
         final Path buildFile = getBuildFile(rollingPath);
         if (completeBuildTargets && buildFile != null) {
-            final String content = tracker.getContents(buildFile.toUri());
-            final StarlarkFile file = getStarlarkFile(content, buildFile);
-            if (file != null) {
-                for (StarlarkWizard.TargetMeta meta : getWizard().locateTargets(file)) {
-                    final CompletionItem item = new CompletionItem();
-                    item.setLabel(meta.name().getValue());
-                    item.setKind(CompletionItemKind.Value);
-                    completions.add(item);
-                }
+            final URI uri = buildFile.toUri();
+            final ImmutableList<StarlarkWizard.TargetMeta> targets = getWizard().allDeclaredTargets(uri);
+            for (StarlarkWizard.TargetMeta meta : targets) {
+                final CompletionItem item = new CompletionItem();
+                item.setLabel(meta.name().getValue());
+                item.setKind(CompletionItemKind.Value);
+                completions.add(item);
             }
         }
 
         return completed(completions);
-    }
-
-    private StarlarkFile getStarlarkFile(String content, Path path) {
-        StarlarkFile file = null;
-        try {
-            final ParserInput input = ParserInput.fromString(content, path.toUri().toString());
-            file = StarlarkFile.parse(input);
-        } catch (Error | RuntimeException e) {
-            logger.error("Parsing failed for an unknown reason!");
-            logger.error(Logging.stackTraceToString(e));
-        }
-
-        return file;
     }
 
     private Path getBuildFile(Path pkgPath) {

@@ -45,60 +45,6 @@
                 "category": "Bazel",
                 "command": "bazel.restartServer",
                 "title": "Restart language server"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.buildTarget",
-                "title": "Build Target"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.buildTargetWithDebugging",
-                "title": "Build Target with Starlark Debugger"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.buildAll",
-                "title": "Build Package"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.buildAllRecursive",
-                "title": "Build Package Recursively"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.testTarget",
-                "title": "Test Target"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.testAll",
-                "title": "Test Package"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.testAllRecursive",
-                "title": "Test Package Recursively"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.clean",
-                "title": "Clean"
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.refreshBazelBuildTargets",
-                "title": "Refresh Bazel Build Targets",
-                "icon": {
-                    "dark": "./icons/refresh-dark.svg",
-                    "light": "./icons/refresh-light.svg"
-                }
-            },
-            {
-                "category": "Bazel",
-                "command": "bazel.copyTargetToClipboard",
-                "title": "Copy Label to Clipboard"
             }
         ],
         "configuration": {
@@ -109,19 +55,6 @@
                     "type": "string",
                     "default": "",
                     "description": "The name of the Bazel executable. This may be an absolute path or a simple name that will be searched for on the system path. If empty, \"bazel\" on the system path will be used."
-                },
-                "bazel.syncMode": {
-                    "type": "string",
-                    "default": "commandOnly",
-                    "enum": [
-                        "showSyncPopup",
-                        "commandOnly"
-                    ],
-                    "markdownDescription": "Controls how the server should present syncs options.",
-                    "enumDescriptions": [
-                        "A sync popup will appear on file save.",
-                        "Server syncing will only be triggered when calling the bazel.syncServer command."
-                    ]
                 },
                 "bazel.useCodelense": {
                     "type": "boolean",

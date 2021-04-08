@@ -6,8 +6,6 @@ java_library(
     name = "completion",
     srcs = glob(["**/*.java"]),
     deps = [
-        "//server/src/main/java/server/bazel/bazelWorkspaceAPI",
-        "//server/src/main/java/server/bazel/tree",
         "//server/src/main/java/server/utils",
         "//server/src/main/java/server/workspace",
         "//third_party/java:guava",

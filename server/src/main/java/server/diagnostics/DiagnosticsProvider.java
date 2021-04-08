@@ -5,13 +5,9 @@ import net.starlark.java.syntax.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.*;
-import server.bazel.bazelWorkspaceAPI.WorkspaceAPI;
-import server.bazel.interp.CompatabilityUtility;
-import server.bazel.interp.Label;
-import server.bazel.interp.LabelSyntaxException;
-import server.bazel.tree.BuildTarget;
-import server.bazel.tree.WorkspaceTree;
+import server.bazel.interp.*;
 import server.utils.DocumentTracker;
+import server.utils.FileRepository;
 import server.utils.Logging;
 import server.utils.StarlarkWizard;
 import server.workspace.Workspace;
@@ -39,14 +35,11 @@ public class DiagnosticsProvider {
     }
 
     private List<Diagnostic> getDiagnosticsForLabelList(Iterable<Expression> expressions) {
-        final WorkspaceTree tree = Workspace.getInstance().getWorkspaceTree();
-        final WorkspaceAPI api = new WorkspaceAPI(tree);
-
         final List<Diagnostic> diagnostics = new ArrayList<>();
         final Set<String> labelsInList = new HashSet<>();
 
         for (final Expression expr : expressions) {
-            final Range range = wizard.rangeFromExpression(expr);
+            final Range range = StarlarkWizard.rangeFromExpression(expr);
 
             // Labels must be strings.
             if (expr.kind() != Expression.Kind.STRING_LITERAL) {
@@ -85,8 +78,6 @@ public class DiagnosticsProvider {
             // Convert the label to a target and ensure it exists. Use the parent of the
             // text doc because we don't want the BUILD file.
             {
-                final BuildTarget target = CompatabilityUtility.labelToBuildTarget(label, textDocPath.getParent());
-
                 boolean fileExists = false;
                 Path rootPath = Workspace.getInstance().getRootFolder().getPath();
                 if (label.hasPkg() && label.hasTarget()) {
@@ -101,7 +92,40 @@ public class DiagnosticsProvider {
                     fileExists = Files.exists(absPath);
                 }
 
-                boolean targetExists = api.isValidTarget(target);
+                String targetName;
+                if (label.hasTarget()) {
+                    targetName = label.target();
+                } else if (label.hasPkg()) {
+                    if (label.pkg().contains("/")) {
+                        final String[] parts = label.pkg().split("/");
+                        targetName = parts[parts.length - 1];
+                    } else {
+                        targetName = label.pkg();
+                    }
+                } else {
+                    targetName = label.workspace();
+                }
+
+                Path targetPkg;
+                try {
+                    final LabelResolveInput input = new LabelResolveInput();
+                    input.setFileRepository(FileRepository.getDefault());
+                    input.setLocalWorkspacePath(Workspace.getInstance().getRootFolder().getPath());
+                    input.setLocalDeclaringFilePath(textDocPath.getParent());
+
+                    final LabelResolveOutput output = label.resolve(input);
+                    targetPkg = output.getPath();
+                } catch (LabelNotFoundException e) {
+                    targetPkg = null;
+                }
+
+                boolean targetExists;
+                if (targetName == null || targetPkg == null) {
+                    targetExists = false;
+                } else {
+                    targetExists = wizard.targetWithNameExists(targetPkg.toUri(), targetName);
+                }
+
                 if (!fileExists && !targetExists) {
                     Diagnostic diag = new Diagnostic();
                     diag.setSeverity(DiagnosticSeverity.Error);
@@ -132,6 +156,7 @@ public class DiagnosticsProvider {
         return diagnostics;
     }
 
+
     public void handleDiagnostics(DiagnosticParams params) {
         Preconditions.checkNotNull(params);
         Preconditions.checkNotNull(params.getClient());
@@ -141,18 +166,9 @@ public class DiagnosticsProvider {
         final URI textDocURI = params.getUri();
         textDocPath = Paths.get(textDocURI);
         wizard = params.getWizard();
-        final String textDocContent = DocumentTracker.getInstance().getContents(textDocURI);
 
         // Parse the starlark file.
-        final StarlarkFile file;
-        try {
-            final ParserInput input = ParserInput.fromString(textDocContent, textDocURI.toString());
-            file = StarlarkFile.parse(input);
-        } catch (Error | RuntimeException e) {
-            logger.error("Parsing failed for an unknown reason!");
-            logger.error(Logging.stackTraceToString(e));
-            return;
-        }
+        final StarlarkFile file = wizard.getFile(textDocURI);
 
         // Keep track of all diagnostics to handle/display to the user.
         final List<Diagnostic> diagnostics = new ArrayList<>();
@@ -174,7 +190,7 @@ public class DiagnosticsProvider {
         }
 
         // Interpret all targets and gather information for diagnostics.
-        final List<StarlarkWizard.TargetMeta> targetMetaData = wizard.locateTargets(file);
+        final List<StarlarkWizard.TargetMeta> targetMetaData = wizard.allDeclaredTargets(textDocURI);
         final Map<String, StringLiteral> allTargetNames = new HashMap<>();
         for (final StarlarkWizard.TargetMeta data : targetMetaData) {
             // Add all diagnostics for srcs attributes.
@@ -198,7 +214,7 @@ public class DiagnosticsProvider {
                     diag.setSeverity(DiagnosticSeverity.Warning);
                     diag.setCode(DiagnosticCodes.DUPLICATE_TARGET);
                     diag.setMessage(String.format("Duplicate target '%s' found in file.", nameValue));
-                    diag.setRange(wizard.rangeFromExpression(data.name()));
+                    diag.setRange(StarlarkWizard.rangeFromExpression(data.name()));
                     diagnostics.add(diag);
                     continue;
                 }

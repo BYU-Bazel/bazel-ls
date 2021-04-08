@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,12 +20,66 @@ import java.util.Map;
 public class StarlarkWizard {
     private static final Logger logger = LogManager.getLogger(StarlarkWizard.class);
 
-    public StarlarkWizard() {
+    private final DocumentTracker tracker;
+    private final Map<URI, StarlarkFile> files;
+
+    public StarlarkWizard(DocumentTracker tracker) {
         super();
+        Preconditions.checkNotNull(tracker);
+        this.tracker = tracker;
+        files = new HashMap<>();
     }
 
-    public ImmutableList<TargetMeta> locateTargets(StarlarkFile file) {
+    public DocumentTracker getTracker() {
+        return tracker;
+    }
+
+    public boolean containsFile(URI uri) {
+        return files.containsKey(uri);
+    }
+
+    public StarlarkFile getFile(URI uri) {
+        Preconditions.checkNotNull(uri);
+
+        if (files.containsKey(uri)) {
+            return files.get(uri);
+        }
+
+        return syncFile(uri);
+    }
+
+    public StarlarkFile syncFile(URI uri) {
+        Preconditions.checkNotNull(uri);
+
+        final String content = getTracker().getContents(uri);
+        if (content == null) {
+            return null;
+        }
+
+        try {
+            final ParserInput input = ParserInput.fromString(content, uri.getPath());
+            final StarlarkFile file = StarlarkFile.parse(input);
+            files.put(uri, file);
+            return file;
+        } catch (Error | RuntimeException e) {
+            logger.error("Parsing failed for an unknown reason!");
+            logger.error(Logging.stackTraceToString(e));
+            return null;
+        }
+    }
+
+    public void clearFiles() {
+        files.clear();
+    }
+
+    public ImmutableList<TargetMeta> allDeclaredTargets(URI uri) {
         final List<TargetMeta> result = new ArrayList<>();
+
+        final StarlarkFile file = getFile(uri);
+        if (file == null) {
+            logger.info("Unable to get file for declared targets.");
+            return ImmutableList.of();
+        }
 
         for (final Statement stmt : file.getStatements()) {
             if (stmt.kind() == Statement.Kind.EXPRESSION) {
@@ -75,11 +130,34 @@ public class StarlarkWizard {
         return ImmutableList.copyOf(result);
     }
 
-    public boolean anyCallsContainPos(StarlarkFile file, Position pos) {
-        Preconditions.checkNotNull(file);
+    public boolean targetWithNameExists(URI uri, String name) {
+        Preconditions.checkNotNull(uri);
+        Preconditions.checkNotNull(name);
+
+        final ImmutableList<TargetMeta> targets = allDeclaredTargets(uri);
+        for (TargetMeta meta : targets) {
+            final String metaName = meta.name().getValue();
+            if (metaName == null) {
+                continue;
+            }
+
+            if (metaName.equals(name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean anyCallsContainPos(URI uri, Position pos) {
+        Preconditions.checkNotNull(uri);
         Preconditions.checkNotNull(pos);
 
-        final ImmutableList<TargetMeta> targets = locateTargets(file);
+        final ImmutableList<TargetMeta> targets = allDeclaredTargets(uri);
+        if (targets == null) {
+            return false;
+        }
+
         for (final TargetMeta target : targets) {
             if (target.call != null && callExpressionContainsPos(target.call, pos)) {
                 return true;
@@ -89,7 +167,7 @@ public class StarlarkWizard {
         return false;
     }
 
-    private boolean callExpressionContainsPos(CallExpression expression, Position pos) {
+    private static boolean callExpressionContainsPos(CallExpression expression, Position pos) {
         Preconditions.checkNotNull(expression);
         Preconditions.checkNotNull(pos);
 
@@ -107,14 +185,10 @@ public class StarlarkWizard {
             return false;
         }
 
-        if (pos.getLine() == endRow && pos.getCharacter() > endCol) {
-            return false;
-        }
-
-        return true;
+        return pos.getLine() != endRow || pos.getCharacter() <= endCol;
     }
 
-    public Range rangeFromExpression(Expression expr) {
+    public static Range rangeFromExpression(Expression expr) {
         final int line = expr.getStartLocation().line() - 1;
         final int colstart = expr.getStartLocation().column();
 

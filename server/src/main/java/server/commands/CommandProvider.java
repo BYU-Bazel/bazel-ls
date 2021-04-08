@@ -6,14 +6,12 @@ import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import server.bazel.cli.AbstractBazelCommand;
-import server.bazel.cli.BazelServerException;
 import server.dispatcher.CommandDispatcher;
 import server.dispatcher.CommandOutput;
 import server.utils.Nullability;
-import server.workspace.ExtensionConfig;
+import server.utils.StarlarkWizard;
 import server.workspace.Workspace;
 
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +24,15 @@ public class CommandProvider {
     private static final CommandDispatcher fallbackDispatcher = CommandDispatcher.create("commandprovider");
 
     private CommandDispatcher dispatcher;
+    private StarlarkWizard wizard;
+
+    public StarlarkWizard getWizard() {
+        return wizard;
+    }
+
+    public void setWizard(StarlarkWizard wizard) {
+        this.wizard = wizard;
+    }
 
     public CommandProvider() {
         super();
@@ -63,7 +70,7 @@ public class CommandProvider {
                     logger.info(params.getCommand() + " was invoked, nothing should happen");
                     break;
                 case AllCommands.syncServer:
-                    executeSyncServerCommand(languageClient);
+                    executeSyncServerCommand();
                     break;
                 default:
                     logger.error("Unsupported command: " + params.getCommand());
@@ -73,52 +80,10 @@ public class CommandProvider {
     }
 
     /**
-     * Requests a server sync to the client. If the client responds with yes, then the
-     * sync server command will be executed.
-     *
-     * @param client an interface with which to return output and feedback to the client.
-     */
-    public void tryRequestSyncServerCommand(LanguageClient client) {
-        ExtensionConfig.SyncMode syncMode = Nullability.nullableOr(ExtensionConfig.SyncMode.commandOnly,
-                () -> Workspace.getInstance().getExtensionConfig().getBazel().getSyncMode());
-        if (syncMode.equals(ExtensionConfig.SyncMode.showSyncPopup)) {
-            ShowMessageRequestParams p = new ShowMessageRequestParams();
-            p.setMessage("A file has changed. Would you like to sync the server?");
-            p.setType(MessageType.Info);
-
-            List<MessageActionItem> actionItems = new ArrayList<>();
-            actionItems.add(new MessageActionItem("Yes"));
-            actionItems.add(new MessageActionItem("No"));
-            p.setActions(actionItems);
-
-            CompletableFuture<MessageActionItem> result = client.showMessageRequest(p);
-            result.thenAccept(s -> {
-                logger.info("MessageActionItem completed with value: " + s.getTitle());
-                if (s.getTitle().equals("Yes")) {
-                    executeSyncServerCommand(client);
-                }
-            });
-        }
-    }
-
-    /**
      * Syncs the state of the language server with the contents in memory.
-     *
-     * @param languageClient an interface with which to return output and feedback to the client.
      */
-    public void executeSyncServerCommand(LanguageClient languageClient) {
-        try {
-            Workspace.getInstance().syncWorkspace();
-        } catch (BazelServerException e) {
-            MessageParams msg = new MessageParams();
-            msg.setType(MessageType.Warning);
-            msg.setMessage(String.format(
-                    "Unable to sync the server because issues were found in the codebase... Try fixing " +
-                            "all syntax errors and ensuring that all targets are valid. Bazel error output:\n\n%s",
-                    e.getMessage()
-            ));
-            languageClient.showMessage(msg);
-        }
+    public void executeSyncServerCommand() {
+        getWizard().clearFiles();
     }
 
     /**

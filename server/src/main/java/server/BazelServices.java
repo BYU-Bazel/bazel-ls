@@ -44,9 +44,11 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     private DocLinkResolver docLinkResolver;
     private CompletionProvider completionProvider;
     private CompletionResolver completionResolver;
+    private CodeLensProvider codeLensProvider;
+    private CodeLensResolver codeLensResolver;
 
     public BazelServices() {
-        wizard = new StarlarkWizard();
+        wizard = new StarlarkWizard(DocumentTracker.getInstance());
         languageClient = null;
         diagnosticsProvider = new DiagnosticsProvider();
         commandProvider = new CommandProvider();
@@ -54,36 +56,40 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
         docLinkResolver = new DocLinkResolver();
         completionProvider = new CompletionProvider();
         completionResolver = new CompletionResolver();
+        codeLensProvider = new CodeLensProvider();
+        codeLensResolver = new CodeLensResolver();
     }
 
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         logger.info("Did Open");
+
+        final URI uri = URI.create(params.getTextDocument().getUri());
         DocumentTracker.getInstance().didOpen(params);
-        {
-            final DiagnosticParams diagnosticParams = new DiagnosticParams();
-            diagnosticParams.setWizard(wizard);
-            diagnosticParams.setClient(languageClient);
-            diagnosticParams.setTracker(DocumentTracker.getInstance());
-            diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
-            diagnosticsProvider.handleDiagnostics(diagnosticParams);
-        }
+        wizard.syncFile(uri);
+
+        final DiagnosticParams diagnosticParams = new DiagnosticParams();
+        diagnosticParams.setWizard(wizard);
+        diagnosticParams.setClient(languageClient);
+        diagnosticParams.setTracker(DocumentTracker.getInstance());
+        diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
+        diagnosticsProvider.handleDiagnostics(diagnosticParams);
     }
 
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
         logger.info("Did Change");
-        DocumentTracker.getInstance().didChange(params);
 
-        // Handle diagnostics.
-        {
-            final DiagnosticParams diagnosticParams = new DiagnosticParams();
-            diagnosticParams.setWizard(wizard);
-            diagnosticParams.setClient(languageClient);
-            diagnosticParams.setTracker(DocumentTracker.getInstance());
-            diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
-            diagnosticsProvider.handleDiagnostics(diagnosticParams);
-        }
+        final URI uri = URI.create(params.getTextDocument().getUri());
+        DocumentTracker.getInstance().didChange(params);
+        wizard.syncFile(uri);
+
+        final DiagnosticParams diagnosticParams = new DiagnosticParams();
+        diagnosticParams.setWizard(wizard);
+        diagnosticParams.setClient(languageClient);
+        diagnosticParams.setTracker(DocumentTracker.getInstance());
+        diagnosticParams.setUri(URI.create(params.getTextDocument().getUri()));
+        diagnosticsProvider.handleDiagnostics(diagnosticParams);
     }
 
     @Override
@@ -95,9 +101,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
         logger.info("Did Save");
-
-        // Handle sync popups.
-        commandProvider.tryRequestSyncServerCommand(languageClient);
     }
 
     @Override
@@ -142,14 +145,17 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         logger.info("Formatting request received");
         Buildifier buildifier = new Buildifier();
+
         // Formatting is done through the buildifier. We must verify that the client has buildifier installed.
+        // Display a popup indicating the client does not have buildifier installed if the verification failed.
         if (buildifier.exists()) {
             FormattingProvider formattingProvider = new FormattingProvider(DocumentTracker.getInstance(), buildifier);
             return formattingProvider.getDocumentFormatting(params);
         } else {
-            // Display a popup indicating the client does not have buildifier installed.
-            languageClient.showMessage(new MessageParams(MessageType.Info, "Buildifier executable not found.\nPlease install buildifier to enable file formatting."));
-            return CompletableFuture.completedFuture(new ArrayList<TextEdit>());
+            languageClient.showMessage(new MessageParams(MessageType.Info,
+                    "Buildifier executable not found.\nPlease install buildifier to enable file formatting."
+            ));
+            return CompletableFuture.completedFuture(new ArrayList<>());
         }
     }
 
@@ -162,8 +168,7 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
             return CompletableFuture.completedFuture(new ArrayList<>());
         }
 
-        logger.info("CodeLens request received");
-        CodeLensProvider codeLensProvider = new CodeLensProvider(DocumentTracker.getInstance());
+        codeLensProvider.setWizard(wizard);
         return codeLensProvider.getCodeLens(params);
     }
 
@@ -176,8 +181,6 @@ public class BazelServices implements TextDocumentService, WorkspaceService, Lan
             return CompletableFuture.completedFuture(unresolved);
         }
 
-        logger.info("CodeLens resolve request received");
-        CodeLensResolver codeLensResolver = new CodeLensResolver();
         return codeLensResolver.resolveCodeLens(unresolved);
     }
 

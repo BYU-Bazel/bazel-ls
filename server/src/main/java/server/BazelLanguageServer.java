@@ -9,9 +9,7 @@ import server.commands.AllCommands;
 import server.completion.TriggerCharacters;
 import server.workspace.ProjectFolder;
 import server.workspace.Workspace;
-import server.bazel.cli.BazelServerException;
 
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 public class BazelLanguageServer implements LanguageServer, LanguageClientAware {
@@ -51,25 +49,12 @@ public class BazelLanguageServer implements LanguageServer, LanguageClientAware 
         serverCapabilities.setExecuteCommandProvider(new ExecuteCommandOptions(AllCommands.allCommands()));
         serverCapabilities.setDocumentLinkProvider(new DocumentLinkOptions(true));
 
-        logger.info(String.format("Declared server capabilities: \"%s\"", serverCapabilities));
-
         return new InitializeResult(serverCapabilities);
     }
 
     private void initializeWorkspaceRoot(InitializeParams params) {
         final ProjectFolder folder = ProjectFolder.fromURI(params.getRootUri());
         Workspace.getInstance().setRootFolder(folder);
-
-        try {
-            Workspace.getInstance().syncWorkspace();
-            logger.info("workspace syned");
-        } catch (BazelServerException e) {
-            logger.info("workspace error");
-            String message = "Bazel Extension Failed to parse due to BUILD Parsing errors:\n";
-            String fix = "Please fix the Bazel Syntax error then restart the Extension\n";
-            bazelServices.sendMessageToClient(MessageType.Error, message + fix + e.getMessage());
-        }
-
         logger.info(String.format("Declared root folder: \"%s\"", Workspace.getInstance().getRootFolder()));
     }
 

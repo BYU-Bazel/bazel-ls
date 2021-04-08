@@ -8,7 +8,8 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 // You can change this to configure which example project you want to develop in.
-                "/workspaces/dev/playground/examples/py_parser_paths",
+                // "/workspaces/dev/playground/examples/py_parser_paths",
+                "/workspaces/dev/playground/examples/cpp_lots_o_files/generated/main_project",
                 "--extensionDevelopmentPath=${workspaceRoot}/client_vscode",
             ],
             "stopOnEntry": false,

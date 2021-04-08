@@ -1,5 +1,7 @@
 package server.bazel.interp;
 
+import server.bazel.interp.InterpException;
+
 public class LabelNotFoundException extends InterpException {
     public LabelNotFoundException() {
         super();

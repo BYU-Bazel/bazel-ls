@@ -26,14 +26,12 @@ public class ExtensionConfig {
     public static class Bazel {
         private Buildifier buildifier;
         private Java java;
-        private SyncMode syncMode;
         private boolean useCodelense;
         private boolean showCommandPopups;
 
         public Bazel() {
             buildifier = null;
             java = null;
-            syncMode = null;
             useCodelense = false;
             showCommandPopups = false;
         }
@@ -54,14 +52,6 @@ public class ExtensionConfig {
             this.java = java;
         }
 
-        public SyncMode getSyncMode() {
-            return syncMode;
-        }
-
-        public void setSyncMode(SyncMode syncMode) {
-            this.syncMode = syncMode;
-        }
-
         public boolean useCodelense() {
             return useCodelense;
         }
@@ -77,14 +67,6 @@ public class ExtensionConfig {
         public void setShowCommandPopups(boolean showCommandPopups) {
             this.showCommandPopups = showCommandPopups;
         }
-    }
-
-    /**
-     * Controls how the server should present syncs options.
-     */
-    public enum SyncMode {
-        showSyncPopup,
-        commandOnly,
     }
 
     /**

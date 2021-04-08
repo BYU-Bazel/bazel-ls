@@ -28,6 +28,22 @@ public class Label {
     }
 
     /**
+     * Creates a label from the specified parts.
+     *
+     * @param workspace The workspace.
+     * @param pkg       The package name.
+     * @param target    The target name.
+     * @return A label constructed from parts.
+     */
+    public static Label fromParts(String workspace, String pkg, String target) throws LabelSyntaxException {
+        if (workspace == null && pkg == null && target == null) {
+            throw new LabelSyntaxException("At least one part must be specified.");
+        }
+
+        return new Label(workspace, pkg, target);
+    }
+
+    /**
      * Factory to parse labels from a string. The value could be similar to any
      * of the following forms.
      * <p>
@@ -79,7 +95,7 @@ public class Label {
             throw new LabelSyntaxException("A label may not be empty.");
         }
 
-        return new Label(
+        return Label.fromParts(
                 hasWorkspace ? workspaceValue : null,
                 hasRoot ? Nullability.nullableOr("", () -> pkgValue) : null,
                 hasTarget ? targetValue : null

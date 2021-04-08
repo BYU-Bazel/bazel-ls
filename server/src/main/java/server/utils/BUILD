@@ -4,16 +4,7 @@ package(default_visibility = ["//visibility:public"])
 
 java_library(
     name = "utils",
-    srcs = [
-        "Callbacks.java",
-        "DocumentTracker.java",
-        "FileRepository.java",
-        "Logging.java",
-        "Nullability.java",
-        "Observatory.java",
-        "Positions.java",
-        "StarlarkWizard.java",
-    ],
+    srcs = glob(["**/*.java"]),
     deps = [
         "//third_party/java:guava",
         "//third_party/java:log4j",
