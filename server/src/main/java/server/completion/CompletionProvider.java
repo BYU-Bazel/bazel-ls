@@ -80,11 +80,6 @@ public class CompletionProvider {
             absPackagePath = absDocumentPath.getParent();
         }
 
-        // Don't allow autocompletions for anything other than BUILD files.
-        if (!absDocumentPath.toString().endsWith("BUILD") && !absDocumentPath.toString().endsWith("BUILD.bazel")) {
-            return completed(completions);
-        }
-
         // Get the current file contents.
         final String currentFileContent;
         {
@@ -103,30 +98,41 @@ public class CompletionProvider {
         boolean shouldAutocomplete = false;
         String toAutocomplete = null;
         {
-            final Pattern pattern = Pattern.compile(TriggerCharacters.QUOTE_REGEX);
-            final Matcher matcher = pattern.matcher(currentLine);
-            final int triggerIdx = params.getPosition().getCharacter() - 1;
+            StringBuilder builder = new StringBuilder();
 
-            while (matcher.find()) {
-                final int matchStart = matcher.start();
-                final int matchEnd = matcher.end() - 1;
-
-                final boolean frontMatchesEnd = currentLine.charAt(matchStart) == currentLine.charAt(matchEnd);
-                if (frontMatchesEnd && triggerIdx == matchEnd && matchEnd != matchStart) {
+            int triggerIdx = params.getPosition().getCharacter() - 1;
+            for (int i = triggerIdx; i >= 0; --i) {
+                if (currentLine.charAt(i) == TriggerCharacters.SINGLE_QUOTE.charAt(0) ||
+                        currentLine.charAt(i) == TriggerCharacters.DOUBLE_QUOTE.charAt(0)) {
+                    shouldAutocomplete = true;
                     break;
                 }
 
-                if (triggerIdx >= matchStart && triggerIdx <= matchEnd) {
-                    shouldAutocomplete = true;
-                    toAutocomplete = currentLine.substring(matchStart, matchEnd + 1).substring(1);
+                builder.append(currentLine.charAt(i));
+            }
+
+            String str = builder.reverse().toString();
+            if (str.endsWith(TriggerCharacters.DOUBLE_QUOTE) || str.endsWith(TriggerCharacters.SINGLE_QUOTE)) {
+                shouldAutocomplete = false;
+            }
+
+            // Ensure that this autocomplete isn't a closing string.
+            final Pattern pattern = Pattern.compile(TriggerCharacters.QUOTE_REGEX);
+            final Matcher matcher = pattern.matcher(currentLine);
+            while (matcher.find()) {
+                final int matchStart = matcher.start(0);
+                final int matchEnd = matchStart + matcher.group(0).length() - 1;
+
+                final boolean endIsQuote = currentLine.charAt(matchEnd) == TriggerCharacters.SINGLE_QUOTE.charAt(0) ||
+                        currentLine.charAt(matchEnd) == TriggerCharacters.DOUBLE_QUOTE.charAt(0);
+                if (endIsQuote && triggerIdx == matchEnd && matchEnd != matchStart) {
+                    shouldAutocomplete = false;
                     break;
                 }
             }
 
-            // Try to infer if this completion should take place based on the starlark file.
-            if (!getWizard().anyCallsContainPos(absDocumentPath.toUri(), params.getPosition())) {
-                toAutocomplete = null;
-                shouldAutocomplete = false;
+            if (shouldAutocomplete) {
+                toAutocomplete = str;
             }
         }
 

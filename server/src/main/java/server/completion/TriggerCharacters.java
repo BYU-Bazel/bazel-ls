@@ -10,7 +10,7 @@ public class TriggerCharacters {
     public static final String DOUBLE_SLASH = "//";
     public static final String SINGLE_QUOTE = "'";
     public static final String DOUBLE_QUOTE = "\"";
-    public static final String QUOTE_REGEX = "([\"'])(?:(.*?)\\1|(?:.(?!\\1))*$)";
+    public static final String QUOTE_REGEX = "([\"'])(?:(.*?)\\1)";
 
     private TriggerCharacters() {
         super();
